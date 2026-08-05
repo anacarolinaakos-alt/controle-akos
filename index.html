@@ -1,0 +1,3063 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle Financeiro AKOS × MRD</title>
+<meta name="description" content="Sistema de controle financeiro de importação por conta e ordem — AKOS × MRD.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Controle Financeiro AKOS × MRD">
+<meta property="og:description" content="Sistema de controle financeiro de importação por conta e ordem.">
+
+<style>
+/* MRD — Controle Financeiro de Importação | estilo */
+:root {
+  --bg: #0f1720; --panel: #ffffff; --ink: #1f2733; --muted: #6b7785; --line: #e3e8ef;
+  --brand: #0b5fff; --brand-d: #0846c2; --ok: #128a4b; --warn: #c2740a; --danger: #cf2e2e; --info: #1170c4;
+  --soft: #f5f7fa; --soft2: #eef2f7; --shadow: 0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.06);
+  --radius: 10px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: "Segoe UI", Roboto, system-ui, -apple-system, Arial, sans-serif;
+  color: var(--ink); background: var(--soft); font-size: 14px; line-height: 1.45;
+}
+.app { display: grid; grid-template-columns: 232px 1fr; height: 100vh; }
+
+/* sidebar */
+.sidebar { background: #0e1b2e; color: #cdd7e4; display: flex; flex-direction: column; }
+.brand { padding: 16px 16px 14px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.brand-logo { display: inline-flex; align-items: center; gap: 8px; background: #fff; border-radius: 9px; padding: 9px 13px; text-decoration: none; margin-bottom: 13px; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: transform .1s ease, box-shadow .15s ease; }
+.brand-logo:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(0,0,0,.3); }
+.brand-mark { width: 20px; height: 29px; flex: none; }
+.brand-word { display: inline-flex; align-items: baseline; line-height: 1; }
+.brand-word b { color: #3f3f3f; font-weight: 800; font-size: 19px; letter-spacing: -.3px; }
+.brand-word .tr { color: #6f6f6f; font-weight: 400; font-size: 15px; margin-left: 3px; }
+.brand-title { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: .2px; }
+.brand-title small { display: block; font-weight: 400; font-size: 11px; color: #8ea4c0; margin-top: 2px; }
+#brand-sub { display: block; margin-top: 6px; font-size: 12px; color: #6fa8ff; font-weight: 600; }
+nav { padding: 10px 8px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; flex: 1; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; color: #c0cee0; text-decoration: none; border-radius: 8px; font-size: 13.5px; }
+.nav-item:hover { background: rgba(255,255,255,.06); color: #fff; }
+.nav-item.active { background: var(--brand); color: #fff; font-weight: 600; }
+.nav-icon { width: 18px; text-align: center; opacity: .9; }
+.sidebar-foot { padding: 12px 16px; font-size: 11px; color: #6b7d96; border-top: 1px solid rgba(255,255,255,.08); }
+
+/* main */
+.main { display: flex; flex-direction: column; overflow: hidden; }
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; background: #fff; border-bottom: 1px solid var(--line); }
+#page-title { font-size: 18px; font-weight: 700; margin: 0; }
+.topbar-right { display: flex; align-items: center; gap: 14px; color: var(--muted); font-size: 12px; }
+#save-status { opacity: 0; transition: opacity .2s; color: var(--ok); font-weight: 600; }
+#save-status.show { opacity: 1; }
+#view { padding: 22px 24px 60px; overflow-y: auto; }
+
+/* cards */
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.card-head h2 { font-size: 15px; margin: 0; }
+.card-actions { display: flex; gap: 8px; }
+.card > table, .card > div { }
+.card .grid, .card > .form-grid, .card .info-grid, .card .bars, .card .filters, .card .btn-row, .card .hint { margin: 0; }
+.card > div { padding: 0; }
+.card .info-grid, .card .bars, .card .filters, .card > .form-grid { padding: 16px 18px; }
+.card .hint { padding: 0 18px 16px; }
+
+/* KPIs */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+.kpi { background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--muted); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+.kpi.clickable { cursor: pointer; transition: transform .08s, box-shadow .12s; }
+.kpi.clickable:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16,24,40,.12); }
+.kpi-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+.kpi-value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+.kpi-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.kpi-primary { border-left-color: var(--brand); } .kpi-ok { border-left-color: var(--ok); }
+.kpi-info { border-left-color: var(--info); } .kpi-warn { border-left-color: var(--warn); }
+.kpi-danger { border-left-color: var(--danger); }
+.kpi-danger .kpi-value { color: var(--danger); } .kpi-warn .kpi-value { color: var(--warn); }
+
+/* tables */
+table.grid { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.grid th { text-align: left; padding: 10px 14px; background: var(--soft); color: var(--muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .3px; border-bottom: 1px solid var(--line); position: sticky; top: 0; }
+table.grid td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+table.grid.dense td, table.grid.dense th { padding: 7px 12px; }
+table.grid tbody tr:hover { background: #f8fafc; }
+table.grid tr.clickable { cursor: pointer; }
+table.grid tr.foot td, table.grid tfoot td { font-weight: 700; background: var(--soft2); border-top: 2px solid var(--line); }
+.t-right { text-align: right; } .t-center { text-align: center; }
+td.t-right, th.t-right { text-align: right; font-variant-numeric: tabular-nums; }
+.empty { padding: 24px; text-align: center; color: var(--muted); }
+
+/* DRE table */
+table.dre td:first-child { width: 70%; }
+table.dre tr.h td { background: var(--soft); font-weight: 700; text-transform: uppercase; font-size: 12px; color: var(--muted); }
+table.dre tr.sub td { font-weight: 600; background: #fafbfd; }
+table.dre tr.total td { font-weight: 800; font-size: 15px; background: #eef5ff; color: var(--brand-d); border-top: 2px solid var(--brand); }
+table.dre tr.pct-row td { color: var(--muted); font-style: italic; }
+
+/* info grid */
+.info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 18px; }
+.info-item { display: flex; flex-direction: column; }
+.info-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
+.info-value { font-weight: 600; }
+
+/* bars */
+.bars { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: grid; grid-template-columns: 80px 1fr 130px 46px; align-items: center; gap: 12px; padding: 4px 0; border-radius: 6px; }
+.bar-row.clickable { cursor: pointer; } .bar-row.clickable:hover { background: #f8fafc; }
+.bar-label { font-weight: 600; font-size: 13px; }
+.bar-track { position: relative; height: 20px; background: var(--soft2); border-radius: 5px; overflow: hidden; }
+.bar-fill { position: absolute; left: 0; top: 0; height: 100%; background: #c7d7f5; border-radius: 5px; }
+.bar-fill-rec { background: var(--ok); opacity: .85; }
+.bar-val { text-align: right; font-variant-numeric: tabular-nums; font-size: 13px; }
+.bar-pct { text-align: right; font-weight: 700; font-size: 12px; }
+
+/* badges */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; line-height: 1.6; }
+.badge-ok { background: #e3f6ea; color: var(--ok); } .badge-danger { background: #fde6e6; color: var(--danger); }
+.badge-warn { background: #fdf0dc; color: var(--warn); } .badge-info { background: #e2eefb; color: var(--info); }
+.badge-muted { background: var(--soft2); color: var(--muted); }
+
+/* buttons */
+.btn { border: 1px solid var(--line); background: #fff; color: var(--ink); padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn:hover { background: var(--soft); }
+.btn-primary { background: var(--brand); border-color: var(--brand); color: #fff; } .btn-primary:hover { background: var(--brand-d); }
+.btn-ok { background: var(--ok); border-color: var(--ok); color: #fff; } .btn-ok:hover { filter: brightness(.95); }
+.btn-danger { background: #fff; border-color: var(--danger); color: var(--danger); } .btn-danger:hover { background: #fde6e6; }
+.btn-ghost { background: transparent; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* filters / forms */
+.filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; border-bottom: 1px solid var(--line); }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
+.field-help { font-size: 11px; color: var(--muted); }
+.inp { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; font-family: inherit; min-width: 150px; background: #fff; }
+.inp:focus { outline: 2px solid #bcd3ff; border-color: var(--brand); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field-wide { grid-column: 1 / -1; }
+
+/* modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(15,23,32,.5); display: flex; align-items: flex-start; justify-content: center; padding: 50px 16px; z-index: 100; overflow-y: auto; }
+.modal { background: #fff; border-radius: 12px; width: 560px; max-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+.modal-wide { width: 820px; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.modal-head h3 { margin: 0; font-size: 16px; }
+.modal-x { border: none; background: none; font-size: 16px; cursor: pointer; color: var(--muted); }
+.modal-body { padding: 18px 20px; }
+.modal-sub { margin: 18px 0 10px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; border-top: 1px solid var(--line); padding-top: 14px; }
+.modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--line); background: var(--soft); border-radius: 0 0 12px 12px; }
+.modal-body .info-grid { grid-template-columns: repeat(2, 1fr); margin-bottom: 6px; }
+
+/* toasts */
+#toasts { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 200; }
+.toast { padding: 11px 16px; border-radius: 8px; color: #fff; font-weight: 600; font-size: 13px; box-shadow: var(--shadow); opacity: 0; transform: translateY(8px); transition: all .25s; }
+.toast.show { opacity: 1; transform: none; }
+.toast-ok { background: var(--ok); } .toast-warn { background: var(--warn); } .toast-danger { background: var(--danger); }
+
+/* blocos de custo de importação (detalhe do processo) */
+.custo-grid { columns: 2; column-gap: 18px; padding: 18px; }
+.custo-block { break-inside: avoid; margin: 0 0 18px; border: 1px solid var(--line); border-radius: 9px; background: #fff; overflow: hidden; }
+.custo-block .sub-title { margin: 0; padding: 10px 14px; background: var(--soft); border-bottom: 1px solid var(--line); font-size: 11px; color: var(--muted); font-weight: 800; letter-spacing: .5px; }
+.custo-block table.grid.dre { font-size: 13px; }
+.custo-block table.grid.dre td { padding: 8px 14px; border-bottom: 1px solid #eef2f7; }
+.custo-block table.grid.dre tr:last-child td { border-bottom: none; }
+.custo-block table.grid.dre td:first-child { width: 62%; color: var(--ink); }
+.custo-block table.grid.dre td.t-right { font-variant-numeric: tabular-nums; }
+.custo-block table.grid.dre tr.sub td { font-weight: 700; background: #eef5ff; color: var(--brand-d); border-top: 1px solid #d7e3f5; }
+.custo-block table.grid.dre tr:hover td { background: transparent; }
+.custo-block table.grid.dre tr.sub:hover td { background: #eef5ff; }
+.raw-details { margin: 6px 18px 16px; border-top: 1px solid var(--line); padding-top: 10px; }
+.raw-details summary { cursor: pointer; color: var(--brand); font-weight: 600; font-size: 13px; }
+.raw-details table { margin-top: 10px; }
+@media (max-width: 900px) { .custo-grid { columns: 1; } }
+
+/* importação de NF por PDF */
+.imp-info { background: #eef5ff; border: 1px solid #d7e3f5; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; line-height: 1.6; }
+.raw-pdf { max-height: 220px; overflow: auto; background: var(--soft); border-radius: 6px; padding: 10px; font-size: 11px; white-space: pre-wrap; word-break: break-word; }
+
+/* cabeçalho de subseção com botão (Notas Fiscais) */
+.sub-head { display: flex; align-items: center; justify-content: space-between; margin: 16px 18px 8px; }
+.sub-head .sub-title { margin: 0; }
+
+/* editor da DRE */
+.dre-edit-head, .dre-edit-row { display: grid; grid-template-columns: 1fr 140px 110px 38px 38px; gap: 8px; align-items: center; }
+.dre-edit-head { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; padding: 0 2px 6px; }
+.dre-edit-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.dre-edit-row .inp { min-width: 0; }
+
+/* formulário editável de custos */
+.cust-form { display: flex; flex-direction: column; gap: 6px; }
+.cust-sec { border: 1px solid var(--line); border-radius: 9px; padding: 12px 14px; margin-bottom: 12px; }
+.cust-sec-title { margin: 0 0 10px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; font-weight: 800; }
+.cust-form .form-grid { grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+.cust-form .inp { min-width: 0; }
+.calc-line { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding: 8px 12px; background: #eef5ff; border-radius: 7px; font-weight: 700; color: var(--brand-d); }
+.calc-val { font-variant-numeric: tabular-nums; }
+.desp-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.desp-row { display: grid; grid-template-columns: 1fr 160px 38px; gap: 8px; align-items: center; }
+
+/* blocos de conferência da DRE (Comissão a pagar / Lucro AKOS / Saldo de NF-e) */
+.conf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.conf-grid .card { margin-bottom: 0; }
+@media (max-width: 980px) { .conf-grid { grid-template-columns: 1fr; } }
+
+/* Processos - Geral: vista vertical (ficha do processo) */
+.vert-block { border: 1px solid var(--line); border-radius: 9px; margin: 0 18px 14px; overflow: hidden; }
+.vert-title { margin: 0; padding: 10px 14px; background: var(--soft); border-bottom: 1px solid var(--line); font-size: 12.5px; font-weight: 700; color: var(--ink); }
+.kv-vert { display: flex; flex-direction: column; }
+.kv-vrow { display: flex; justify-content: space-between; gap: 16px; padding: 8px 14px; border-bottom: 1px solid #eef2f7; font-size: 13px; }
+.kv-vrow:last-child { border-bottom: none; }
+.kv-vrow:nth-child(even) { background: #fcfdfe; }
+.kv-k { color: var(--muted); text-transform: uppercase; font-size: 11px; letter-spacing: .3px; }
+.kv-v { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.vert-actions { padding: 10px 14px; border-top: 1px solid var(--line); }
+
+/* tabela larga com rolagem horizontal (Processos - Geral) */
+.scroll-x { overflow-x: auto; }
+.scroll-x table.grid td, .scroll-x table.grid th { white-space: nowrap; }
+.scroll-x table.grid th { position: static; font-weight: 800; color: var(--ink); font-size: 12px; }
+
+.sub-title { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; margin: 16px 18px 8px; }
+.card .sub-title:first-child { margin-top: 14px; }
+
+/* tela de login (nuvem) */
+.login-overlay { position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; background: linear-gradient(135deg, #0e1b2e 0%, #16406e 100%); }
+.login-card { background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.35); padding: 30px 30px 26px; width: 380px; max-width: 100%; }
+.login-brand { display: flex; align-items: baseline; gap: 4px; margin-bottom: 18px; }
+.login-mark { font-weight: 800; font-size: 22px; color: #17406b; letter-spacing: -.5px; }
+.login-mark2 { font-weight: 400; font-size: 18px; color: #6f6f6f; }
+.login-card h2 { margin: 0 0 4px; font-size: 20px; }
+.login-sub { margin: 0 0 18px; color: var(--muted); font-size: 13.5px; }
+.login-card .field { margin-bottom: 14px; }
+.login-card .inp { width: 100%; min-width: 0; }
+.login-msg { color: var(--danger); font-size: 13px; min-height: 18px; margin-bottom: 8px; font-weight: 600; }
+.btn-block { width: 100%; padding: 11px; font-size: 14px; }
+
+/* painel — 2 colunas e legenda das barras */
+.dash-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.dash-2col .card { margin-bottom: 20px; }
+@media (max-width: 980px) { .dash-2col { grid-template-columns: 1fr; } }
+a.link-mini { text-decoration: none; }
+a.link-mini:hover { text-decoration: underline; }
+.bar-legend { display: flex; gap: 18px; padding: 12px 18px 0; font-size: 12px; color: var(--muted); }
+.bar-legend .lg { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; margin-right: 5px; }
+.bar-legend .lg-fat { background: #c7d7f5; }
+.bar-legend .lg-rec { background: var(--ok); }
+
+/* banner de sincronização */
+#sync-banner:empty { display: none; }
+.sync-banner { display: flex; align-items: center; gap: 12px; background: #fff7e6; border-bottom: 1px solid #f0d9a8; color: #7a5b12; padding: 11px 24px; font-size: 13.5px; }
+.sync-banner .sync-ic { font-size: 16px; }
+.sync-banner .sync-msg { flex: 1; font-weight: 600; }
+.sync-banner .sync-actions { display: flex; gap: 8px; }
+.sync-banner.sync-warn { background: #fde6e6; border-bottom-color: #f0b8b8; color: #a12626; }
+.btn-sm { padding: 5px 10px; font-size: 12.5px; }
+
+/* misc */
+.crumb { margin-bottom: 14px; font-size: 13px; } .crumb a { color: var(--brand); text-decoration: none; } .crumb a:hover { text-decoration: underline; }
+.hint { color: var(--muted); font-size: 12.5px; }
+.neg { color: var(--danger); font-weight: 600; } .warn-text { color: var(--warn); font-weight: 600; }
+.pend { color: var(--warn); font-weight: 600; }
+.muted { color: var(--muted); } .ok { color: var(--ok); } .info { color: var(--info); }
+.link-mini { color: var(--brand); font-weight: 600; font-size: 12px; }
+.error-box { background: #fde6e6; border: 1px solid var(--danger); color: var(--danger); padding: 14px; border-radius: 8px; }
+.error-box pre { white-space: pre-wrap; font-size: 12px; }
+
+/* topbar: botão de menu (só no celular) e e-mail do usuário */
+.btn-menu { display: none; border: 1px solid var(--line); background: #fff; border-radius: 8px; font-size: 18px; line-height: 1; padding: 6px 10px; cursor: pointer; margin-right: 10px; }
+.topbar h1 { flex: 1; }
+.user-email { font-size: 12px; color: var(--muted); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 40; }
+
+@media (max-width: 1100px) { .kpi-grid, .info-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* ---------- CELULAR / TELAS PEQUENAS ---------- */
+@media (max-width: 820px) {
+  .app { grid-template-columns: 1fr; }
+  .btn-menu { display: inline-block; }
+  /* menu vira gaveta deslizante */
+  .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 250px; z-index: 50; transform: translateX(-100%); transition: transform .22s ease; }
+  body.menu-open .sidebar { transform: translateX(0); }
+  body.menu-open .sidebar-backdrop { display: block; }
+  .topbar { padding: 12px 14px; }
+  #page-title { font-size: 16px; }
+  #view { padding: 14px 12px 60px; }
+  .kpi-grid, .info-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .card-head { flex-wrap: wrap; gap: 8px; }
+  .card-actions { flex-wrap: wrap; }
+  .filters { gap: 8px; }
+  .filters .inp, .inp { min-width: 0; width: 100%; }
+  .field { width: 100%; }
+  /* toda tabela ganha rolagem lateral no celular */
+  .card > table.grid, .card table.grid { display: block; overflow-x: auto; white-space: nowrap; }
+  .modal, .modal-wide { width: 100%; }
+  .modal-overlay { padding: 12px; }
+  .user-email { display: none; }
+  .bar-row { grid-template-columns: 56px 1fr 84px 34px; gap: 6px; }
+  .bar-val { font-size: 11px; }
+}
+@media (max-width: 600px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .info-grid { grid-template-columns: 1fr 1fr; }
+  .card-actions .btn { font-size: 12px; padding: 7px 10px; }
+}
+
+</style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <div class="app">
+    <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+    <aside class="sidebar">
+      <div class="brand">
+        <a class="brand-logo" href="#/dashboard" title="AKOS Trading — Início">
+          <svg class="brand-mark" viewBox="0 0 28 40" aria-hidden="true">
+            <rect x="0" y="0" width="13" height="13" fill="#17406b"></rect>
+            <polygon points="6,17 27,17 21,38 0,38" fill="#17406b"></polygon>
+          </svg>
+          <span class="brand-word"><b>AKOS</b><span class="tr">Trading</span></span>
+        </a>
+        <div class="brand-title">Controle Financeiro AKOS × MRD
+          <small>Importação por conta e ordem</small>
+        </div>
+      </div>
+      <nav id="nav"></nav>
+      <div class="sidebar-foot" id="sidebar-foot">Dados salvos na nuvem.<br/>Backup automático a cada hora.</div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <button id="btn-menu" class="btn-menu" title="Menu" aria-label="Abrir menu">☰</button>
+        <h1 id="page-title">Painel de Controle</h1>
+        <div class="topbar-right">
+          <span id="save-status">✔ salvo</span>
+          <span id="user-email" class="user-email"></span>
+          <button id="btn-logout" class="btn btn-sm" style="display:none" title="Sair da conta">Sair</button>
+        </div>
+      </header>
+      <div id="sync-banner"></div>
+      <div id="view"></div>
+    </main>
+  </div>
+
+  
+<script>
+// Publicado sem dados embutidos â€” a fonte e a nuvem (Supabase).
+window.SEED_DATA = { "version": 1, "empresa": { "adquirente": "AKOS", "importadora": "MRD", "comissaoPct": 0.05, "taxaAdmPadrao": 3000 }, "clientes": [], "processos": [], "itens": [], "boletos": [], "cambio": [], "nfEmitidas": [], "nfEntrada": [] };
+</script>
+<script>
+/* supabase.js — conexão com o banco na nuvem (login + dados) */
+(function () {
+  "use strict";
+
+  var SB_URL = "https://ncgralwwlidkamjweavc.supabase.co";
+  var SB_KEY = "sb_publishable_WFKpQa-uyRqq_0V9BkP2rw_S3KrwsTE";
+  var STATE_ID = "main";
+  // conta única de acesso: a "senha compartilhada" é a senha desta conta.
+  var ACCESS_EMAIL = "anacarolina.akos@gmail.com";
+
+  var _client = null;
+  function client() {
+    if (!_client) {
+      if (!window.supabase || !window.supabase.createClient) return null;
+      _client = window.supabase.createClient(SB_URL, SB_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true }
+      });
+    }
+    return _client;
+  }
+
+  var SB = {
+    configured: true,
+    ready: function () { return !!client(); },
+
+    getSession: function () {
+      var c = client(); if (!c) return Promise.resolve(null);
+      return c.auth.getSession().then(function (r) { return r && r.data ? r.data.session : null; });
+    },
+    onAuthChange: function (cb) {
+      var c = client(); if (!c) return;
+      c.auth.onAuthStateChange(function (_evt, session) { cb(session); });
+    },
+    signIn: function (email, password) {
+      return client().auth.signInWithPassword({ email: email, password: password });
+    },
+    // entra com a senha compartilhada (usa a conta única de acesso)
+    signInShared: function (password) {
+      return client().auth.signInWithPassword({ email: ACCESS_EMAIL, password: password });
+    },
+    signOut: function () { return client().auth.signOut(); },
+    userEmail: function () {
+      return SB.getSession().then(function (s) { return s && s.user ? s.user.email : null; });
+    },
+
+    // carrega o "estado" (todos os dados) da nuvem
+    loadState: function () {
+      return client().from("app_state").select("data").eq("id", STATE_ID).maybeSingle()
+        .then(function (r) {
+          if (r.error) throw r.error;
+          return r.data ? r.data.data : null;
+        });
+    },
+    // grava o "estado" na nuvem
+    saveState: function (data) {
+      return client().from("app_state").upsert({ id: STATE_ID, data: data, updated_at: new Date().toISOString() })
+        .then(function (r) { if (r.error) throw r.error; return true; });
+    },
+
+    // ---- backups automáticos ----
+    saveBackup: function (data, autor) {
+      return client().from("app_backups").insert({ autor: autor || null, data: data })
+        .then(function (r) { if (r.error) throw r.error; return true; });
+    },
+    listBackups: function (limite) {
+      return client().from("app_backups").select("id, created_at, autor").order("created_at", { ascending: false }).limit(limite || 30)
+        .then(function (r) { if (r.error) throw r.error; return r.data || []; });
+    },
+    getBackup: function (id) {
+      return client().from("app_backups").select("data").eq("id", id).single()
+        .then(function (r) { if (r.error) throw r.error; return r.data ? r.data.data : null; });
+    },
+
+    // ---- log de alterações ----
+    log: function (acao, detalhe, autor) {
+      var c = client(); if (!c) return Promise.resolve(false);
+      return c.from("audit_log").insert({ acao: acao, detalhe: detalhe || null, autor: autor || null })
+        .then(function () { return true; }).catch(function () { return false; });
+    },
+    listLog: function (limite) {
+      return client().from("audit_log").select("*").order("created_at", { ascending: false }).limit(limite || 300)
+        .then(function (r) { if (r.error) throw r.error; return r.data || []; });
+    }
+  };
+
+  window.SB = SB;
+})();
+
+</script>
+<script>
+/* format.js — utilitários de formatação (pt-BR) */
+(function () {
+  "use strict";
+
+  function isNum(v) { return typeof v === "number" && isFinite(v); }
+
+  var Fmt = {
+    brl: function (v) {
+      if (v === null || v === undefined || v === "" || !isNum(Number(v))) return "—";
+      return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    },
+    // valor monetário sem o símbolo (para tabelas densas)
+    money: function (v) {
+      if (v === null || v === undefined || v === "" || !isNum(Number(v))) return "—";
+      return Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    },
+    num: function (v, dec) {
+      if (v === null || v === undefined || v === "" || isNaN(Number(v))) return "—";
+      dec = dec == null ? 2 : dec;
+      return Number(v).toLocaleString("pt-BR", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    },
+    pct: function (v, dec) {
+      if (v === null || v === undefined || isNaN(Number(v))) return "—";
+      dec = dec == null ? 2 : dec;
+      return (Number(v) * 100).toLocaleString("pt-BR", { minimumFractionDigits: dec, maximumFractionDigits: dec }) + "%";
+    },
+    // ISO (yyyy-mm-dd) -> dd/mm/yyyy
+    date: function (iso) {
+      if (!iso) return "—";
+      var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+      if (m) return m[3] + "/" + m[2] + "/" + m[1];
+      return iso;
+    },
+    // ISO -> yyyy-mm-dd (para <input type=date>)
+    dateInput: function (iso) {
+      if (!iso) return "";
+      var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+      return m ? m[0] : "";
+    },
+    today: function () {
+      var d = new Date();
+      var mm = String(d.getMonth() + 1).padStart(2, "0");
+      var dd = String(d.getDate()).padStart(2, "0");
+      return d.getFullYear() + "-" + mm + "-" + dd;
+    },
+    // "1.234,56" / "1234.56" / "R$ 1.234,56" -> number
+    parseNum: function (s) {
+      if (s === null || s === undefined) return null;
+      if (typeof s === "number") return s;
+      s = String(s).trim();
+      if (s === "") return null;
+      s = s.replace(/[R$\s]/g, "");
+      // remove separador de milhar (.) e troca decimal (,) por .
+      if (s.indexOf(",") >= 0) {
+        s = s.replace(/\./g, "").replace(",", ".");
+      }
+      var n = parseFloat(s);
+      return isFinite(n) ? n : null;
+    },
+    diasAte: function (iso) {
+      if (!iso) return null;
+      var hoje = new Date(Fmt.today() + "T00:00:00");
+      var d = new Date(iso.substring(0, 10) + "T00:00:00");
+      return Math.round((d - hoje) / 86400000);
+    }
+  };
+
+  window.Fmt = Fmt;
+})();
+
+</script>
+<script>
+/* store.js — persistência local (IndexedDB) + estado em memória */
+(function () {
+  "use strict";
+
+  var DB_NAME = "mrd_sistema";
+  var STORE = "kv";
+  var KEY = "state";
+  var SCHEMA_VERSION = 1;
+
+  function openDB() {
+    return new Promise(function (resolve, reject) {
+      if (typeof indexedDB === "undefined" || !indexedDB) { reject(new Error("IndexedDB indisponível")); return; }
+      var done = false;
+      var to = setTimeout(function () { if (!done) { done = true; reject(new Error("IndexedDB timeout")); } }, 3000);
+      var req;
+      try { req = indexedDB.open(DB_NAME, 1); } catch (e) { clearTimeout(to); reject(e); return; }
+      req.onupgradeneeded = function () {
+        var db = req.result;
+        if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+      };
+      req.onsuccess = function () { if (done) return; done = true; clearTimeout(to); resolve(req.result); };
+      req.onerror = function () { if (done) return; done = true; clearTimeout(to); reject(req.error); };
+      req.onblocked = function () { if (done) return; done = true; clearTimeout(to); reject(new Error("IndexedDB bloqueado")); };
+    });
+  }
+
+  // camada de persistência com fallback: IndexedDB -> localStorage -> memória
+  var BACKEND = "indexeddb"; // detectado em runtime
+  var LS_KEY = "mrd_sistema_state";
+
+  function idbGet(key) {
+    return openDB().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(STORE, "readonly");
+        var r = tx.objectStore(STORE).get(key);
+        r.onsuccess = function () { resolve(r.result); };
+        r.onerror = function () { reject(r.error); };
+      });
+    });
+  }
+
+  function idbSet(key, val) {
+    return openDB().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(STORE, "readwrite");
+        tx.objectStore(STORE).put(val, key);
+        tx.oncomplete = function () { resolve(true); };
+        tx.onerror = function () { reject(tx.error); };
+      });
+    });
+  }
+
+  // get/set genéricos com fallback automático
+  function backendGet(key) {
+    return idbGet(key).catch(function () {
+      BACKEND = tryLocalStorage() ? "localstorage" : "memoria";
+      return lsGet(key);
+    });
+  }
+  function backendSet(key, val) {
+    if (BACKEND === "indexeddb") {
+      return idbSet(key, val).catch(function () {
+        BACKEND = tryLocalStorage() ? "localstorage" : "memoria";
+        warnBackend();
+        return lsSet(key, val);
+      });
+    }
+    return Promise.resolve(lsSet(key, val));
+  }
+  function tryLocalStorage() {
+    try { localStorage.setItem("__t", "1"); localStorage.removeItem("__t"); return true; } catch (e) { return false; }
+  }
+  function lsName(key) { return "mrd_sistema_" + key; }
+  function lsGet(key) { try { var v = localStorage.getItem(lsName(key)); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+  function lsSet(key, val) { try { localStorage.setItem(lsName(key), JSON.stringify(val)); return true; } catch (e) { return false; } }
+  var _warned = false;
+  function warnBackend() {
+    if (_warned) return; _warned = true;
+    document.dispatchEvent(new CustomEvent("store:backend-warn", { detail: { backend: BACKEND } }));
+  }
+
+  var _idCounter = 1;
+  function newId(prefix) {
+    return (prefix || "r") + "_" + Date.now().toString(36) + "_" + (_idCounter++).toString(36);
+  }
+
+  function ensureIds(state) {
+    ["processos", "itens", "boletos", "cambio", "clientes", "nfEmitidas", "nfEntrada"].forEach(function (coll) {
+      if (!Array.isArray(state[coll])) state[coll] = [];
+      state[coll].forEach(function (rec) {
+        if (!rec._id) rec._id = newId(coll.substring(0, 3));
+      });
+    });
+    if (!state.empresa) state.empresa = { adquirente: "AKOS", importadora: "MRD", comissaoPct: 0.05, taxaAdmPadrao: 3000 };
+    if (!state.schemaVersion) state.schemaVersion = SCHEMA_VERSION;
+    return state;
+  }
+
+  function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  // ---- log de alterações ----
+  var COLL_LABEL = {
+    processos: "processo", itens: "NF-e/cliente", boletos: "boleto", cambio: "câmbio",
+    clientes: "cliente", nfEmitidas: "NF de saída", nfEntrada: "NF de entrada"
+  };
+  function descRec(coll, rec) {
+    if (!rec) return "";
+    if (coll === "processos") return rec.id || "";
+    if (coll === "boletos") return [rec.nfParcela, rec.cliente].filter(Boolean).join(" · ");
+    if (coll === "itens") return ["NF " + (rec.nfe || ""), rec.cliente].filter(Boolean).join(" · ");
+    if (coll === "cambio") return rec.processoId || "";
+    if (coll === "clientes") return rec.nome || "";
+    if (coll === "nfEmitidas" || coll === "nfEntrada") return "nº " + (rec.numero || "");
+    return "";
+  }
+  function logAction(acao, detalhe) {
+    if (window.SB && Store._cloud) { try { window.SB.log(acao, detalhe, Store._userEmail); } catch (e) {} }
+  }
+
+  // ---- backup automático (1x por hora) ----
+  var UMA_HORA = 60 * 60 * 1000;
+  function talvezBackup() {
+    if (!Store._cloud || !window.SB) return;
+    var agora = new Date().getTime();
+    if (Store._lastBackup && (agora - Store._lastBackup) < UMA_HORA) return;
+    Store._lastBackup = agora;
+    try { window.SB.saveBackup(Store.state, Store._userEmail).catch(function () { }); } catch (e) { }
+  }
+
+  var Store = {
+    state: null,
+    _saveTimer: null,
+
+    backend: function () { return Store._cloud ? "nuvem" : BACKEND; },
+    isCloud: function () { return !!Store._cloud; },
+
+    init: function () {
+      // modo nuvem (Supabase) tem prioridade quando configurado
+      if (window.SB && window.SB.configured && window.SB.ready()) {
+        Store._cloud = true;
+        return window.SB.loadState().then(function (data) {
+          if (data && Array.isArray(data.processos) && data.processos.length) {
+            Store.state = ensureIds(data); Store._fromSeed = false;
+            return Store.state;
+          }
+          // primeira vez na nuvem: migra os dados atuais (seed)
+          Store.state = ensureIds(deepClone(window.SEED_DATA || { processos: [], itens: [], boletos: [], cambio: [], clientes: [] }));
+          Store._fromSeed = true;
+          return Store.persistNow().then(function () { return Store.state; });
+        });
+      }
+      // modo local (IndexedDB / localStorage)
+      return backendGet(KEY).then(function (saved) {
+        if (saved && saved.processos) {
+          Store.state = ensureIds(saved);
+          Store._fromSeed = false;
+        } else {
+          Store.state = ensureIds(deepClone(window.SEED_DATA || { processos: [], itens: [], boletos: [], cambio: [], clientes: [] }));
+          Store._fromSeed = true;
+          return Store.persistNow().then(function () { return Store.state; });
+        }
+        return Store.state;
+      });
+    },
+
+    // grava (debounced)
+    save: function () {
+      if (Store._saveTimer) clearTimeout(Store._saveTimer);
+      Store._saveTimer = setTimeout(function () { Store.persistNow(); talvezBackup(); }, 250);
+    },
+
+    setUser: function (email) { Store._userEmail = email || null; },
+    user: function () { return Store._userEmail || null; },
+    // dispara o backup automático de tempos em tempos e ao entrar
+    startBackupTimer: function () {
+      talvezBackup();
+      if (Store._bkTimer) return;
+      Store._bkTimer = setInterval(talvezBackup, 10 * 60 * 1000); // checa a cada 10 min; grava se passou 1h
+    },
+    log: logAction,
+
+    persistNow: function () {
+      if (Store._cloud && window.SB) {
+        return window.SB.saveState(Store.state).then(function () {
+          document.dispatchEvent(new CustomEvent("store:saved"));
+          return true;
+        }).catch(function (e) {
+          document.dispatchEvent(new CustomEvent("store:save-error", { detail: e }));
+          throw e;
+        });
+      }
+      return backendSet(KEY, Store.state).then(function () {
+        document.dispatchEvent(new CustomEvent("store:saved"));
+        return true;
+      });
+    },
+
+    newId: newId,
+
+    // ---- helpers de coleção ----
+    find: function (coll, id) {
+      return (Store.state[coll] || []).filter(function (r) { return r._id === id; })[0] || null;
+    },
+    add: function (coll, rec) {
+      if (!rec._id) rec._id = newId(coll.substring(0, 3));
+      Store.state[coll].push(rec);
+      Store.save();
+      logAction("Incluiu " + (COLL_LABEL[coll] || coll), descRec(coll, rec));
+      return rec;
+    },
+    remove: function (coll, id) {
+      var arr = Store.state[coll];
+      var i = arr.findIndex(function (r) { return r._id === id; });
+      if (i >= 0) { var rec = arr[i]; arr.splice(i, 1); Store.save(); logAction("Excluiu " + (COLL_LABEL[coll] || coll), descRec(coll, rec)); return true; }
+      return false;
+    },
+    update: function (coll, id, patch) {
+      var rec = Store.find(coll, id);
+      if (rec) { Object.assign(rec, patch); Store.save(); logAction("Editou " + (COLL_LABEL[coll] || coll), descRec(coll, rec)); }
+      return rec;
+    },
+
+    exportJSON: function () {
+      return JSON.stringify(Store.state, null, 2);
+    },
+    importJSON: function (obj) {
+      if (typeof obj === "string") obj = JSON.parse(obj);
+      if (!obj || !Array.isArray(obj.processos)) throw new Error("Arquivo inválido: não parece um backup do sistema.");
+      Store.state = ensureIds(obj);
+      return Store.persistNow();
+    },
+    resetToSeed: function () {
+      Store.state = ensureIds(deepClone(window.SEED_DATA));
+      return Store.persistNow();
+    },
+
+    // garante _id em todos os registros (após importação que substitui coleções)
+    reindex: function () { ensureIds(Store.state); },
+
+    // snapshot de segurança antes de sincronizar (permite desfazer)
+    savePresync: function () {
+      return backendSet("presync", { state: deepClone(Store.state), at: new Date().toISOString() });
+    },
+    getPresync: function () { return backendGet("presync"); },
+    undoSync: function () {
+      return backendGet("presync").then(function (snap) {
+        if (snap && snap.state) {
+          Store.state = ensureIds(snap.state);
+          return Store.persistNow().then(function () { return true; });
+        }
+        return false;
+      });
+    }
+  };
+
+  window.Store = Store;
+})();
+
+</script>
+<script>
+/* calc.js — cálculos financeiros e indicadores */
+(function () {
+  "use strict";
+
+  function n(v) { return (typeof v === "number" && isFinite(v)) ? v : 0; }
+  function sum(arr, f) { return arr.reduce(function (a, x) { return a + n(f(x)); }, 0); }
+
+  var TIPO_NORM = {
+    "saldo nfe": "Saldo NFe", "saldo nf-e": "Saldo NFe", "saldo de nf-e": "Saldo NFe",
+    "câmbio": "Câmbio", "cambio": "Câmbio", "registro": "Registro"
+  };
+  function normTipo(t) {
+    if (!t) return "";
+    var k = String(t).toLowerCase().trim();
+    return TIPO_NORM[k] || t;
+  }
+
+  var Calc = {
+    n: n, sum: sum, normTipo: normTipo,
+
+    itensDoProc: function (s, pid) { return s.itens.filter(function (i) { return i.processoId === pid; }); },
+    boletosDoProc: function (s, pid) { return s.boletos.filter(function (b) { return b.processoId === pid; }); },
+    cambioDoProc: function (s, pid) { return s.cambio.filter(function (c) { return c.processoId === pid; }); },
+
+    pago: function (b) {
+      var p = (b.pago || "").toString().toLowerCase().trim();
+      return p === "sim" || p === "pago" || p === "true";
+    },
+
+    valorRecebidoBoleto: function (b) {
+      if (Calc.pago(b)) return n(b.valorRecebido) || n(b.valor);
+      return n(b.valorRecebido);
+    },
+
+    // status operacional de um boleto
+    statusBoleto: function (b) {
+      if (Calc.pago(b)) return "pago";
+      var dias = window.Fmt.diasAte(b.vencimento);
+      if (dias === null) return "aberto";
+      if (dias < 0) return "vencido";
+      if (dias <= 7) return "vence-breve";
+      return "aberto";
+    },
+
+    faturamento: function (s, pid) { return sum(Calc.itensDoProc(s, pid), function (i) { return i.valorTotal; }); },
+    valorProduto: function (s, pid) { return sum(Calc.itensDoProc(s, pid), function (i) { return i.valorProduto; }); },
+
+    recebido: function (s, pid) {
+      return sum(Calc.boletosDoProc(s, pid).filter(Calc.pago), function (b) { return Calc.valorRecebidoBoleto(b); });
+    },
+    aReceber: function (s, pid) {
+      // considera também pagamentos parciais (boleto pago com valor recebido < valor)
+      return sum(Calc.boletosDoProc(s, pid), function (b) {
+        return Calc.pago(b) ? Math.max(0, n(b.valor) - Calc.valorRecebidoBoleto(b)) : n(b.valor);
+      });
+    },
+
+    // resumo consolidado de um processo
+    resumoProc: function (s, p) {
+      var pid = p.id;
+      var fat = Calc.faturamento(s, pid);
+      var rec = Calc.recebido(s, pid);
+      var aRec = Calc.aReceber(s, pid);
+      var bol = Calc.boletosDoProc(s, pid);
+      var porTipo = function (t) { return bol.filter(function (b) { return normTipo(b.tipo) === t; }); };
+      var cust = p.custo || {};
+      return {
+        processo: p,
+        faturamento: fat,
+        valorProduto: Calc.valorProduto(s, pid),
+        adiantamento: n(p.valorAKOSxMRD) || n(cust.adiantamento),
+        recebido: rec,
+        aReceber: aRec,
+        cif: n(cust.valorCIF),
+        saldoNFe: n(cust.saldoNFe),
+        saldoFavorMRD: n(cust.saldoFavorMRD),
+        taxaAdm: n(p.txAdmMRD) || n(cust.taxaAdmMRD),
+        nBoletos: bol.length,
+        boletoA: sum(porTipo("Saldo NFe"), function (b) { return b.valor; }),
+        boletoB: sum(porTipo("Câmbio"), function (b) { return b.valor; }),
+        boletoC: sum(porTipo("Registro"), function (b) { return b.valor; }),
+        boletosPagos: bol.filter(Calc.pago).length,
+        boletosVencidos: bol.filter(function (b) { return Calc.statusBoleto(b) === "vencido"; }).length
+      };
+    },
+
+    // KPIs do dashboard
+    dashboard: function (s) {
+      var totFat = 0, totAdiant = 0;
+      s.processos.forEach(function (p) {
+        var r = Calc.resumoProc(s, p);
+        totFat += r.faturamento; totAdiant += r.adiantamento;
+      });
+      // recebido e a receber calculados sobre TODOS os boletos (inclui parciais e órfãos) para reconciliar com a contagem
+      var totRec = sum(s.boletos.filter(Calc.pago), function (b) { return Calc.valorRecebidoBoleto(b); });
+      var totAReceber = sum(s.boletos, function (b) { return Calc.pago(b) ? Math.max(0, n(b.valor) - Calc.valorRecebidoBoleto(b)) : n(b.valor); });
+      var totBoletos = totRec + totAReceber;
+      var venc = s.boletos.filter(function (b) { return Calc.statusBoleto(b) === "vencido"; });
+      var breve = s.boletos.filter(function (b) { return Calc.statusBoleto(b) === "vence-breve"; });
+      var abertos = s.boletos.filter(function (b) { return !Calc.pago(b); });
+      var cambioPend = s.cambio.filter(function (c) {
+        var p = (c.pagos || "").toLowerCase();
+        return p !== "sim" && !n(c.cambioRealizado);
+      });
+      return {
+        nProcessos: s.processos.length,
+        nClientes: (s.clientes || []).length,
+        faturamento: totFat,
+        recebido: totRec,
+        aReceber: totAReceber,
+        adiantamento: totAdiant,
+        pctRecebido: totBoletos ? totRec / totBoletos : 0,
+        nBoletos: s.boletos.length,
+        boletosAbertos: abertos.length,
+        valorAbertos: sum(abertos, function (b) { return b.valor; }),
+        boletosVencidos: venc.length,
+        valorVencidos: sum(venc, function (b) { return b.valor; }),
+        boletosVenceBreve: breve.length,
+        valorVenceBreve: sum(breve, function (b) { return b.valor; }),
+        cambioPendente: cambioPend.length,
+        valorCambioPendente: sum(cambioPend, function (c) { return c.boletoB; })
+      };
+    },
+
+    // DRE consolidada (calculada a partir dos custos por processo)
+    dre: function (s) {
+      var procs = s.processos;
+      var cu = function (f) { return sum(procs, function (p) { return (p.custo || {})[f]; }); };
+      var vendasBrutas = sum(procs, function (p) { return Calc.faturamento(s, p.id); });
+      var icms = cu("icmsSaida"), ipi = cu("ipiSaida"), pis = cu("pisSaida"), cofins = cu("cofinsSaida");
+      var taxaAdm = sum(procs, function (p) { return n(p.txAdmMRD) || n((p.custo || {}).taxaAdmMRD); });
+      var deducoes = icms + ipi + pis + cofins + taxaAdm;
+      var vendasLiquidas = vendasBrutas - deducoes;
+
+      // Compras = NF de entrada (importação) = base de cálculo + ICMS + IPI (composição,
+      // mais fiel que o valor digitado da NF, que pode ter arredondamento na planilha).
+      var compras = sum(procs, function (p) {
+        var c = p.custo || {};
+        return n(c.baseEntrada) + n(c.icmsEntradaCred) + n(c.ipiEntradaCred);
+      });
+      var credIcms = cu("icmsEntradaCred"), credIpi = cu("ipiEntradaCred");
+      var credPis = cu("pisDI"), credCofins = cu("cofinsDI");
+      var creditos = credIcms + credIpi + credPis + credCofins;
+      var cmv = compras - creditos;
+      var lucroBruto = vendasLiquidas - cmv;
+
+      return {
+        vendasBrutas: vendasBrutas,
+        icms: icms, ipi: ipi, pis: pis, cofins: cofins, taxaAdm: taxaAdm,
+        deducoes: deducoes,
+        vendasLiquidas: vendasLiquidas,
+        compras: compras,
+        credIcms: credIcms, credIpi: credIpi, credPis: credPis, credCofins: credCofins, creditos: creditos,
+        cmv: cmv,
+        lucroBruto: lucroBruto,
+        margemBruta: vendasBrutas ? lucroBruto / vendasBrutas : 0,
+        // referência: composição do custo de importação
+        cif: cu("valorCIF"), impNac: cu("impostosNacionalizacao"),
+        despachante: cu("despachanteSubtotal"), totalCusto: cu("totalCusto"),
+        // visão "ganho MRD"
+        saldoNFe: cu("saldoNFe"),
+        saldoFavorMRD: cu("saldoFavorMRD"),
+        adiantamento: sum(procs, function (p) { return n(p.valorAKOSxMRD) || n((p.custo || {}).adiantamento); })
+      };
+    },
+
+    // fluxo de caixa: entradas (recebimentos) x saídas (custos de importação)
+    fluxo: function (s) {
+      var entradas = sum(s.boletos.filter(Calc.pago), function (b) { return Calc.valorRecebidoBoleto(b); });
+      var adiant = sum(s.processos, function (p) { return n(p.valorAKOSxMRD) || n((p.custo || {}).adiantamento); });
+      var saidasCIF = sum(s.processos, function (p) { return n((p.custo || {}).valorCIF); });
+      var saidasNac = sum(s.processos, function (p) { return n((p.custo || {}).impostosNacionalizacao); });
+      var saidasDesp = sum(s.processos, function (p) { return n((p.custo || {}).despachanteSubtotal); });
+      var saidas = saidasCIF + saidasNac + saidasDesp;
+      return {
+        entradasBoletos: entradas,
+        adiantamentos: adiant,
+        totalEntradas: entradas + adiant,
+        saidasCIF: saidasCIF, saidasNac: saidasNac, saidasDesp: saidasDesp,
+        totalSaidas: saidas,
+        saldo: entradas + adiant - saidas
+      };
+    }
+  };
+
+  window.Calc = Calc;
+})();
+
+</script>
+<script>
+/* ui.js — helpers de DOM e componentes reutilizáveis */
+(function () {
+  "use strict";
+
+  function el(tag, attrs, children) {
+    var node = document.createElement(tag);
+    if (attrs) {
+      Object.keys(attrs).forEach(function (k) {
+        var v = attrs[k];
+        if (v === null || v === undefined || v === false) return;
+        if (k === "class" || k === "className") node.className = v;
+        else if (k === "html") node.innerHTML = v;
+        else if (k === "text") node.textContent = v;
+        else if (k === "dataset") { Object.keys(v).forEach(function (d) { node.dataset[d] = v[d]; }); }
+        else if (k.indexOf("on") === 0 && typeof v === "function") node.addEventListener(k.substring(2).toLowerCase(), v);
+        else if (k === "style" && typeof v === "object") { Object.assign(node.style, v); }
+        else node.setAttribute(k, v);
+      });
+    }
+    if (children != null) appendChildren(node, children);
+    return node;
+  }
+
+  function appendChildren(node, children) {
+    if (!Array.isArray(children)) children = [children];
+    children.forEach(function (c) {
+      if (c === null || c === undefined || c === false) return;
+      if (typeof c === "string" || typeof c === "number") node.appendChild(document.createTextNode(String(c)));
+      else node.appendChild(c);
+    });
+  }
+
+  function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); return node; }
+
+  // tabela: columns = [{key, label, render?, align?, cls?}], rows = array
+  function table(columns, rows, opts) {
+    opts = opts || {};
+    var thead = el("thead", null, el("tr", null, columns.map(function (c) {
+      return el("th", { class: c.align ? "t-" + c.align : null }, c.label);
+    })));
+    var tbody = el("tbody", null, rows.map(function (row, idx) {
+      var tr = el("tr", opts.onRowClick ? { class: "clickable", onclick: function () { opts.onRowClick(row, idx); } } : null,
+        columns.map(function (c) {
+          var content = c.render ? c.render(row, idx) : (row[c.key] != null ? String(row[c.key]) : "");
+          var td = el("td", { class: [c.align ? "t-" + c.align : "", c.cls ? (typeof c.cls === "function" ? c.cls(row) : c.cls) : ""].join(" ").trim() || null });
+          if (content instanceof Node) td.appendChild(content); else td.innerHTML = content;
+          return td;
+        }));
+      return tr;
+    }));
+    var tbl = el("table", { class: "grid" + (opts.dense ? " dense" : "") }, [thead, tbody]);
+    if (opts.footer) tbl.appendChild(el("tfoot", null, opts.footer));
+    if (!rows.length) {
+      var wrap = el("div");
+      wrap.appendChild(tbl);
+      wrap.appendChild(el("div", { class: "empty" }, opts.emptyMsg || "Nenhum registro."));
+      return wrap;
+    }
+    return tbl;
+  }
+
+  function badge(text, kind) { return el("span", { class: "badge badge-" + (kind || "muted") }, text); }
+
+  function statusBadge(status) {
+    var map = {
+      "pago": ["Pago", "ok"], "vencido": ["Vencido", "danger"],
+      "vence-breve": ["Vence em breve", "warn"], "aberto": ["Em aberto", "info"]
+    };
+    var m = map[status] || [status, "muted"];
+    return badge(m[0], m[1]);
+  }
+
+  function kpi(label, value, opts) {
+    opts = opts || {};
+    return el("div", { class: "kpi" + (opts.kind ? " kpi-" + opts.kind : "") + (opts.onclick ? " clickable" : ""), onclick: opts.onclick }, [
+      el("div", { class: "kpi-label" }, label),
+      el("div", { class: "kpi-value" }, value),
+      opts.sub ? el("div", { class: "kpi-sub" }, opts.sub) : null
+    ]);
+  }
+
+  function section(title, contentNode, actions) {
+    var head = el("div", { class: "card-head" }, [
+      el("h2", null, title),
+      actions ? el("div", { class: "card-actions" }, actions) : null
+    ]);
+    return el("section", { class: "card" }, [head, contentNode]);
+  }
+
+  // ---- modal ----
+  function modal(title, bodyNode, opts) {
+    opts = opts || {};
+    var overlay = el("div", { class: "modal-overlay" });
+    var footer = el("div", { class: "modal-foot" }, (opts.buttons || []).map(function (b) {
+      return el("button", {
+        class: "btn " + (b.kind ? "btn-" + b.kind : ""),
+        onclick: function () { if (b.onClick) { if (b.onClick() === false) return; } if (b.close !== false) close(); }
+      }, b.label);
+    }));
+    var box = el("div", { class: "modal" + (opts.wide ? " modal-wide" : "") }, [
+      el("div", { class: "modal-head" }, [el("h3", null, title), el("button", { class: "modal-x", onclick: close }, "✕")]),
+      el("div", { class: "modal-body" }, bodyNode),
+      (opts.buttons && opts.buttons.length) ? footer : null
+    ]);
+    overlay.appendChild(box);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay && opts.dismissable !== false) close(); });
+    document.body.appendChild(overlay);
+    colorNegatives(box);
+    function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); if (opts.onClose) opts.onClose(); }
+    return { close: close, overlay: overlay };
+  }
+
+  function confirmar(msg, onYes, opts) {
+    opts = opts || {};
+    modal(opts.title || "Confirmar", el("p", null, msg), {
+      buttons: [
+        { label: "Cancelar", kind: "ghost" },
+        { label: opts.okLabel || "Confirmar", kind: opts.danger ? "danger" : "primary", onClick: onYes }
+      ]
+    });
+  }
+
+  function toast(msg, kind) {
+    var t = el("div", { class: "toast toast-" + (kind || "ok") }, msg);
+    var host = document.getElementById("toasts") || (function () {
+      var h = el("div", { id: "toasts" }); document.body.appendChild(h); return h;
+    })();
+    host.appendChild(t);
+    setTimeout(function () { t.classList.add("show"); }, 10);
+    setTimeout(function () { t.classList.remove("show"); setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 300); }, 2600);
+  }
+
+  // ---- formulário genérico ----
+  // fields = [{key,label,type,options?,value?,step?,required?,help?}]
+  function form(fields, values) {
+    values = values || {};
+    var inputs = {};
+    var grid = el("div", { class: "form-grid" });
+    fields.forEach(function (f) {
+      var val = values[f.key] != null ? values[f.key] : (f.value != null ? f.value : "");
+      var input;
+      if (f.type === "select") {
+        input = el("select", { class: "inp" }, (f.options || []).map(function (o) {
+          var ov = typeof o === "object" ? o.value : o;
+          var ol = typeof o === "object" ? o.label : o;
+          return el("option", { value: ov, selected: String(ov) === String(val) ? "selected" : null }, ol);
+        }));
+      } else if (f.type === "textarea") {
+        input = el("textarea", { class: "inp", rows: f.rows || 3 }, String(val));
+      } else if (f.type === "money") {
+        input = el("input", { class: "inp t-right", type: "text", inputmode: "decimal", value: val === "" || val == null ? "" : window.Fmt.money(val) });
+        input.dataset.money = "1";
+      } else if (f.type === "date") {
+        input = el("input", { class: "inp", type: "date", value: window.Fmt.dateInput(val) });
+      } else {
+        input = el("input", { class: "inp", type: f.type || "text", value: String(val) });
+      }
+      inputs[f.key] = input;
+      grid.appendChild(el("label", { class: "field" + (f.wide ? " field-wide" : "") }, [
+        el("span", { class: "field-label" }, f.label + (f.required ? " *" : "")),
+        input,
+        f.help ? el("span", { class: "field-help" }, f.help) : null
+      ]));
+    });
+    function read() {
+      var out = {};
+      fields.forEach(function (f) {
+        var raw = inputs[f.key].value;
+        if (f.type === "money") out[f.key] = window.Fmt.parseNum(raw);
+        else if (f.type === "number") out[f.key] = raw === "" ? null : Number(raw);
+        else out[f.key] = raw === "" ? null : raw;
+      });
+      return out;
+    }
+    return { node: grid, read: read, inputs: inputs };
+  }
+
+  // varre o DOM e pinta de vermelho qualquer número negativo (R$, %, etc.)
+  var NEG_RE = /(?<![\w\d])-(?:R\$\s?)?\d[\d. ]*(?:,\d+)?%?/g;
+  function colorNegatives(root) {
+    if (!root) return;
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        if (!n.nodeValue || n.nodeValue.indexOf("-") < 0) return NodeFilter.FILTER_REJECT;
+        var p = n.parentNode;
+        if (!p) return NodeFilter.FILTER_REJECT;
+        var tag = p.nodeName;
+        if (tag === "SCRIPT" || tag === "STYLE" || tag === "TEXTAREA" || tag === "OPTION") return NodeFilter.FILTER_REJECT;
+        if (p.classList && p.classList.contains("neg")) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function (n) {
+      var text = n.nodeValue; NEG_RE.lastIndex = 0;
+      if (!NEG_RE.test(text)) return;
+      NEG_RE.lastIndex = 0;
+      var frag = document.createDocumentFragment(), last = 0, m;
+      while ((m = NEG_RE.exec(text))) {
+        if (m[0].length === 0) { NEG_RE.lastIndex++; continue; }
+        if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+        var span = document.createElement("span");
+        span.className = "neg";
+        span.textContent = m[0];
+        frag.appendChild(span);
+        last = m.index + m[0].length;
+      }
+      if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+      if (last > 0) n.parentNode.replaceChild(frag, n);
+    });
+  }
+
+  function download(filename, content, mime) {
+    var blob = content instanceof Blob ? content : new Blob([content], { type: mime || "text/plain;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = el("a", { href: url, download: filename });
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 500);
+  }
+
+  window.UI = {
+    el: el, clear: clear, table: table, badge: badge, statusBadge: statusBadge,
+    kpi: kpi, section: section, modal: modal, confirmar: confirmar, toast: toast,
+    form: form, download: download, appendChildren: appendChildren, colorNegatives: colorNegatives
+  };
+})();
+
+</script>
+<script>
+/* nfpdf.js — lê o PDF do DANFE e extrai os dados da NF-e (valores, impostos, NCM, chave) */
+(function () {
+  "use strict";
+
+  var PDFJS_SRC = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
+  var PDFJS_WORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+  var _libPromise = null;
+
+  function loadLib() {
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+      return Promise.resolve(window.pdfjsLib);
+    }
+    if (_libPromise) return _libPromise;
+    _libPromise = new Promise(function (resolve, reject) {
+      var s = document.createElement("script");
+      s.src = PDFJS_SRC;
+      s.onload = function () {
+        if (!window.pdfjsLib) { reject(new Error("Não consegui carregar o leitor de PDF.")); return; }
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+        resolve(window.pdfjsLib);
+      };
+      s.onerror = function () { reject(new Error("Sem conexão para carregar o leitor de PDF.")); };
+      document.head.appendChild(s);
+    });
+    return _libPromise;
+  }
+
+  function readFile(file) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function () { resolve(new Uint8Array(r.result)); };
+      r.onerror = function () { reject(new Error("Não consegui ler o arquivo.")); };
+      r.readAsArrayBuffer(file);
+    });
+  }
+
+  // extrai todo o texto do PDF
+  function extractText(file) {
+    return loadLib().then(function (pdfjsLib) {
+      return readFile(file).then(function (bytes) {
+        return pdfjsLib.getDocument({ data: bytes }).promise;
+      }).then(function (pdf) {
+        var pages = [];
+        for (var i = 1; i <= pdf.numPages; i++) pages.push(i);
+        return pages.reduce(function (chain, n) {
+          return chain.then(function (acc) {
+            return pdf.getPage(n).then(function (page) { return page.getTextContent(); })
+              .then(function (tc) {
+                var txt = tc.items.map(function (it) { return it.str; }).join(" ");
+                return acc + " " + txt;
+              });
+          });
+        }, Promise.resolve(""));
+      });
+    });
+  }
+
+  // ---- utilidades de parsing ----
+  function norm(s) {
+    return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/\s+/g, " ");
+  }
+  function toNum(s) {
+    if (!s) return null;
+    var v = String(s).replace(/\./g, "").replace(",", ".");
+    var n = parseFloat(v);
+    return isFinite(n) ? n : null;
+  }
+  var MONEY = "(\\d{1,3}(?:\\.\\d{3})*,\\d{2})";
+  // procura o primeiro valor monetário depois de um rótulo
+  function moneyAfter(T, label) {
+    var i = T.indexOf(label);
+    if (i < 0) return null;
+    var slice = T.substring(i + label.length, i + label.length + 120);
+    var m = slice.match(new RegExp(MONEY));
+    return m ? toNum(m[1]) : null;
+  }
+  function firstOf(T, labels) {
+    for (var i = 0; i < labels.length; i++) {
+      var v = moneyAfter(T, labels[i]);
+      if (v != null) return v;
+    }
+    return null;
+  }
+
+  function parse(rawText) {
+    var T = norm(rawText);
+    var out = { rawText: rawText };
+
+    // chave de acesso (44 dígitos, normalmente impressa em grupos de 4)
+    var chave = null;
+    var mk = T.match(/((?:\d[ ]?){44})/);
+    if (mk) {
+      var only = mk[1].replace(/\D/g, "");
+      if (only.length === 44) chave = only;
+    }
+    out.chave = chave;
+
+    // pela chave dá para tirar número e série com precisão
+    if (chave) {
+      out.serie = String(parseInt(chave.substr(22, 3), 10));
+      out.numero = String(parseInt(chave.substr(25, 9), 10));
+    }
+    // número também pode vir rotulado
+    if (!out.numero) {
+      var mn = T.match(/N[º°O]?\.?\s*([\d.]{3,15})\s*(?:SERIE|S[EÉ]RIE)/);
+      if (mn) out.numero = mn[1].replace(/\D/g, "").replace(/^0+/, "");
+    }
+
+    // data de emissão
+    var md = T.match(/DATA D[AE] EMISS[AÃ]O[^0-9]{0,40}(\d{2}\/\d{2}\/\d{4})/);
+    if (!md) md = T.match(/(\d{2}\/\d{2}\/\d{4})/);
+    if (md) {
+      var p = md[1].split("/");
+      out.emissao = p[2] + "-" + p[1] + "-" + p[0];
+    }
+
+    // valores
+    out.valorProduto = firstOf(T, ["VALOR TOTAL DOS PRODUTOS", "V. TOTAL PRODUTOS", "VLR TOTAL PRODUTOS"]);
+    out.valorNF = firstOf(T, ["VALOR TOTAL DA NOTA", "V. TOTAL DA NOTA", "VALOR TOTAL DA NF"]);
+    out.icms = firstOf(T, ["VALOR DO ICMS", "VLR DO ICMS", "VALOR ICMS"]);
+    out.ipi = firstOf(T, ["VALOR TOTAL DO IPI", "VALOR TOTAL IPI", "VALOR DO IPI", "VLR TOTAL IPI", "VLR TOTAL DO IPI"]);
+    out.pis = firstOf(T, ["VALOR DO PIS", "VALOR PIS", "V. PIS"]);
+    out.cofins = firstOf(T, ["VALOR DA COFINS", "VALOR DO COFINS", "VALOR COFINS", "V. COFINS"]);
+    out.baseIcms = firstOf(T, ["BASE DE CALCULO DO ICMS", "BASE DE CALCULO ICMS"]);
+    out.frete = firstOf(T, ["VALOR DO FRETE", "VALOR TOTAL DO FRETE"]);
+
+    // NCM: procura na área dos itens (depois do cabeçalho NCM/SH)
+    var ncms = [];
+    var iN = T.indexOf("NCM");
+    if (iN >= 0) {
+      var itens = T.substring(iN, iN + 6000);
+      var re = /\b(\d{8})\b/g, m;
+      while ((m = re.exec(itens)) !== null) {
+        if (ncms.indexOf(m[1]) < 0) ncms.push(m[1]);
+        if (ncms.length >= 12) break;
+      }
+    }
+    out.ncms = ncms;
+    out.ncm = ncms.length ? ncms.map(function (c) { return c.substr(0, 4) + "." + c.substr(4, 2) + "." + c.substr(6, 2); }).join(", ") : null;
+
+    // nome do destinatário (melhor esforço)
+    var mdest = T.match(/DESTINAT[AÁ]RIO[^A-Z]{0,20}REMETENTE\s+NOME\s*\/?\s*RAZ[AÃ]O SOCIAL\s+([A-Z0-9 .,&\-\/]{5,60}?)\s+(?:CNPJ|CPF|\d{2}\.\d{3}\.\d{3})/);
+    if (mdest) out.destinatario = mdest[1].trim();
+
+    return out;
+  }
+
+  window.NFPDF = {
+    fromFile: function (file) { return extractText(file).then(parse); },
+    parse: parse
+  };
+})();
+
+</script>
+<script>
+window.IO = { exportExcel: function () { try { UI.toast("ExportaÃ§Ã£o para Excel disponÃ­vel na versÃ£o instalada no PC.", "warn"); } catch (e) {} } };
+window.Sync = { available: false, init: function () {}, manual: function () { try { UI.toast("Este link Ã© somente para consulta (dados do momento).", "warn"); } catch (e) {} return Promise.resolve(false); } };
+</script>
+<script>
+/* views.js — telas do sistema */
+(function () {
+  "use strict";
+  var UI = window.UI, Fmt = window.Fmt, Calc = window.Calc, Store = window.Store;
+  var el = UI.el;
+  function brl(v) { return Fmt.brl(v); }
+  function go(hash) { location.hash = hash; }
+  function s() { return Store.state; }
+
+  var Views = {};
+
+  // tabela simples rótulo/valor (usada nos blocos de custo)
+  function kvTable(rows) {
+    return el("table", { class: "grid dre" }, [el("tbody", null, rows.map(function (r) {
+      var neg = (typeof r.value === "number" && r.value < 0);
+      var valTxt = (typeof r.value === "number") ? brl(r.value) : escTxt(String(r.value));
+      return el("tr", { class: r.bold ? "sub" : "" }, [
+        el("td", null, r.label),
+        el("td", { class: "t-right" + (neg ? " neg" : ""), html: valTxt })
+      ]);
+    }))]);
+  }
+  function escTxt(v) { return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+  // monta a seção de custo de importação agrupada em blocos (editável)
+  function custoSectionNode(p) {
+    var c = p.custo || {};
+    var hasCusto = (c.valorCIF != null || c.totalNFsaida != null || c.totalCusto != null || (c.despesasDespachante && c.despesasDespachante.length) || c.nfMRD != null);
+    var editBtn = el("button", { class: "btn btn-primary", onclick: function () { editarCusto(p); } }, hasCusto ? "✎ Editar custos" : "+ Lançar custos");
+    if (!hasCusto) {
+      return UI.section("Custo de importação (landed cost)",
+        el("div", { class: "empty" }, "Nenhum custo lançado ainda. Clique em “Lançar custos” para inserir CIF, impostos de nacionalização, despesas do despachante, NF de entrada/saída e o resumo."),
+        [editBtn]);
+    }
+    var blocks = [];
+    function block(title, rows) {
+      var f = rows.filter(function (r) { return r.value !== null && r.value !== undefined && r.value !== ""; });
+      if (!f.length) return;
+      blocks.push(el("div", { class: "custo-block" }, [el("h3", { class: "sub-title" }, title), kvTable(f)]));
+    }
+    block("Mercadoria (CIF)", [
+      { label: "FOB / Mercadoria", value: c.fob },
+      { label: "Frete internacional", value: c.freteInternacional },
+      { label: "Seguro internacional", value: c.seguroInternacional },
+      { label: "Capatazias", value: c.capatazias },
+      { label: "= Valor CIF", value: c.valorCIF, bold: true }
+    ]);
+    block("Impostos de nacionalização", [
+      { label: "II – Imposto de Importação", value: c.ii },
+      { label: "IPI", value: c.ipiNac },
+      { label: "PIS", value: c.pisNac },
+      { label: "COFINS", value: c.cofinsNac },
+      { label: "ICMS", value: c.icmsNac },
+      { label: "= Total impostos de nacionalização", value: c.impostosNacionalizacao, bold: true }
+    ]);
+    var desp = (c.despesasDespachante || []).map(function (d) { return { label: d.descricao, value: d.valor }; });
+    desp.push({ label: "= Subtotal despesas do despachante", value: c.despachanteSubtotal, bold: true });
+    block("Despesas do despachante", desp);
+    block("Custo total da importação (landed cost)", [
+      { label: "= CIF + nacionalização + despachante", value: c.totalCusto, bold: true }
+    ]);
+    block("NF de entrada (importação)", [
+      { label: "Base de cálculo", value: c.baseEntrada },
+      { label: "(–) Crédito de imposto IPI", value: c.creditoIpi },
+      { label: "= Valor da NF de entrada", value: c.nfEntradaValor, bold: true }
+    ]);
+    block("Créditos de imposto (adquirente)", [
+      { label: "PIS – DI", value: c.pisDI },
+      { label: "COFINS – DI", value: c.cofinsDI },
+      { label: "ICMS – NF de entrada", value: c.icmsEntradaCred },
+      { label: "IPI – NF de entrada", value: c.ipiEntradaCred },
+      { label: "= Total de crédito (adquirente)", value: c.creditoAdquirente, bold: true }
+    ]);
+    block("NF de saída", [
+      { label: "Taxa administrativa (NF-e serviço MRD)", value: c.taxaAdmMRD },
+      { label: "Base de cálculo", value: c.baseSaida },
+      { label: "PIS", value: c.pisSaida },
+      { label: "COFINS", value: c.cofinsSaida },
+      { label: "ICMS", value: c.icmsSaida },
+      { label: "DIFAL", value: c.difal },
+      { label: "Margem + IR + CSLL", value: c.margemIRCSLL },
+      { label: "IPI saída", value: c.ipiSaida },
+      { label: "= Total da NF de saída", value: c.totalNFsaida, bold: true }
+    ]);
+    block("Resumo (MRD)", [
+      { label: "NF MRD", value: c.nfMRD },
+      { label: "Adiantamento (AKOS → MRD)", value: c.adiantamento },
+      { label: "CIF (mercadoria + frete)", value: c.cifMercFrete },
+      { label: "Saldo de NF-e", value: c.saldoNFe },
+      { label: "(+) Prestação de serviço MRD", value: c.prestacaoServMRD },
+      { label: "= Saldo a favor MRD", value: c.saldoFavorMRD, bold: true }
+    ]);
+
+    var content = [el("div", { class: "custo-grid" }, blocks)];
+    if (c.rawRows && c.rawRows.length) {
+      var raw = el("table", { class: "grid dre" }, [el("tbody", null, c.rawRows.map(function (rr) {
+        var neg = (typeof rr.value === "number" && rr.value < 0);
+        return el("tr", null, [el("td", null, rr.label), el("td", { class: "t-right" + (neg ? " neg" : "") }, rr.value == null ? "" : brl(rr.value))]);
+      }))]);
+      content.push(el("details", { class: "raw-details" }, [
+        el("summary", null, "Ver detalhamento completo (como na planilha)"), raw
+      ]));
+    }
+    return UI.section("Custo de importação (landed cost)", el("div", null, content), [editBtn]);
+  }
+
+  // ---- formulário editável do custo de importação ----
+  function editarCusto(p) {
+    var c = p.custo ? JSON.parse(JSON.stringify(p.custo)) : {};
+    var inp = {}, disp = {};
+    function n(v) { return (typeof v === "number" && isFinite(v)) ? v : 0; }
+    function money(key, val, opts) {
+      opts = opts || {};
+      var i = el("input", { class: "inp t-right", type: "text", inputmode: "decimal", value: (val == null || val === "") ? "" : Fmt.money(val) });
+      i.addEventListener("input", recompute);
+      inp[key] = i; return i;
+    }
+    function field(label, key) { return el("label", { class: "field" }, [el("span", { class: "field-label" }, label), money(key, c[key])]); }
+    function rd(key) { return Fmt.parseNum(inp[key] ? inp[key].value : null); }
+    function calcRow(label, key) {
+      var v = el("span", { class: "calc-val" }, "—"); disp[key] = v;
+      return el("div", { class: "calc-line" }, [el("span", null, label), v]);
+    }
+    function grid(children) { return el("div", { class: "form-grid" }, children); }
+    function sec(title, node) { return el("div", { class: "cust-sec" }, [el("h4", { class: "cust-sec-title" }, title), node]); }
+
+    // despesas do despachante (linhas dinâmicas)
+    var despWrap = el("div", { class: "desp-list" });
+    function addDesp(d) {
+      d = d || { descricao: "", valor: null };
+      var di = el("input", { class: "inp", type: "text", placeholder: "Descrição da despesa", value: d.descricao || "" });
+      var vi = el("input", { class: "inp t-right", type: "text", inputmode: "decimal", placeholder: "0,00", value: d.valor != null ? Fmt.money(d.valor) : "" });
+      vi.addEventListener("input", recompute);
+      var row = el("div", { class: "desp-row" });
+      var rm = el("button", { class: "btn btn-danger btn-sm", onclick: function () { despWrap.removeChild(row); recompute(); } }, "✕");
+      row.appendChild(di); row.appendChild(vi); row.appendChild(rm);
+      row._d = di; row._v = vi;
+      despWrap.appendChild(row);
+    }
+    (c.despesasDespachante || []).forEach(addDesp);
+
+    function despTotal() { var t = 0; Array.prototype.forEach.call(despWrap.querySelectorAll(".desp-row"), function (r) { t += n(Fmt.parseNum(r._v.value)); }); return t; }
+
+    function recompute() {
+      var cif = n(rd("fob")) + n(rd("freteInternacional")) + n(rd("seguroInternacional")) + n(rd("capatazias"));
+      var impNac = n(rd("ii")) + n(rd("ipiNac")) + n(rd("pisNac")) + n(rd("cofinsNac")) + n(rd("icmsNac"));
+      var despSub = despTotal();
+      var totalCusto = cif + impNac + despSub;
+      var credAdq = n(rd("pisDI")) + n(rd("cofinsDI")) + n(rd("icmsEntradaCred")) + n(rd("ipiEntradaCred"));
+      var totalSaida = n(rd("baseSaida")) + n(rd("pisSaida")) + n(rd("cofinsSaida")) + n(rd("icmsSaida")) + n(rd("difal")) + n(rd("margemIRCSLL")) + n(rd("ipiSaida"));
+      var saldoNFe = n(rd("nfMRD")) - n(rd("adiantamento")) - cif;
+      var saldoFav = saldoNFe + n(rd("prestacaoServMRD"));
+      var set = function (k, v) { if (disp[k]) { disp[k].textContent = brl(v); disp[k].className = "calc-val" + (v < 0 ? " neg" : ""); } };
+      set("valorCIF", cif); set("impostosNacionalizacao", impNac); set("despachanteSubtotal", despSub);
+      set("totalCusto", totalCusto); set("creditoAdquirente", credAdq); set("totalNFsaida", totalSaida);
+      set("saldoNFe", saldoNFe); set("saldoFavorMRD", saldoFav);
+      recompute._vals = { cif: cif, impNac: impNac, despSub: despSub, totalCusto: totalCusto, credAdq: credAdq, totalSaida: totalSaida, saldoNFe: saldoNFe, saldoFav: saldoFav };
+    }
+
+    var body = el("div", { class: "cust-form" }, [
+      sec("Mercadoria (CIF)", el("div", null, [
+        grid([field("FOB / Mercadoria", "fob"), field("Frete internacional", "freteInternacional"), field("Seguro internacional", "seguroInternacional"), field("Capatazias", "capatazias")]),
+        calcRow("= Valor CIF", "valorCIF")
+      ])),
+      sec("Impostos de nacionalização", el("div", null, [
+        grid([field("II – Imposto de Importação", "ii"), field("IPI", "ipiNac"), field("PIS", "pisNac"), field("COFINS", "cofinsNac"), field("ICMS", "icmsNac")]),
+        calcRow("= Total impostos de nacionalização", "impostosNacionalizacao")
+      ])),
+      sec("Despesas do despachante", el("div", null, [
+        despWrap,
+        el("button", { class: "btn btn-sm", onclick: function () { addDesp(); } }, "+ Adicionar despesa"),
+        calcRow("= Subtotal despesas do despachante", "despachanteSubtotal")
+      ])),
+      sec("Custo total da importação (landed cost)", calcRow("= CIF + nacionalização + despachante", "totalCusto")),
+      sec("NF de entrada (importação)", el("div", null, [
+        grid([field("Base de cálculo", "baseEntrada"), field("(–) Crédito de imposto IPI", "creditoIpi"), field("Valor da NF de entrada", "nfEntradaValor")])
+      ])),
+      sec("Créditos de imposto (adquirente)", el("div", null, [
+        grid([field("PIS – DI", "pisDI"), field("COFINS – DI", "cofinsDI"), field("ICMS – NF de entrada", "icmsEntradaCred"), field("IPI – NF de entrada", "ipiEntradaCred")]),
+        calcRow("= Total de crédito (adquirente)", "creditoAdquirente")
+      ])),
+      sec("NF de saída", el("div", null, [
+        grid([field("Taxa administrativa (NF-e serviço MRD)", "taxaAdmMRD"), field("Base de cálculo", "baseSaida"), field("PIS", "pisSaida"), field("COFINS", "cofinsSaida"), field("ICMS", "icmsSaida"), field("DIFAL", "difal"), field("Margem + IR + CSLL", "margemIRCSLL"), field("IPI saída", "ipiSaida")]),
+        calcRow("= Total da NF de saída", "totalNFsaida")
+      ])),
+      sec("Resumo (MRD)", el("div", null, [
+        grid([field("NF MRD", "nfMRD"), field("Adiantamento (AKOS → MRD)", "adiantamento"), field("(+) Prestação de serviço MRD", "prestacaoServMRD")]),
+        calcRow("= Saldo de NF-e (NF MRD − Adiant. − CIF)", "saldoNFe"),
+        calcRow("= Saldo a favor MRD", "saldoFavorMRD")
+      ]))
+    ]);
+
+    recompute();
+
+    UI.modal("Custos do processo " + p.id, body, {
+      wide: true,
+      buttons: [
+        { label: "Cancelar", kind: "ghost" },
+        { label: "Salvar custos", kind: "primary", onClick: function () {
+            recompute();
+            var v = recompute._vals;
+            var despesas = [];
+            Array.prototype.forEach.call(despWrap.querySelectorAll(".desp-row"), function (r) {
+              var d = (r._d.value || "").trim(); var val = Fmt.parseNum(r._v.value);
+              if (d || val != null) despesas.push({ descricao: d, valor: val });
+            });
+            var novo = {
+              bl: c.bl || p.blAwb || null,
+              fob: rd("fob"), freteInternacional: rd("freteInternacional"), seguroInternacional: rd("seguroInternacional"), capatazias: rd("capatazias"), valorCIF: v.cif,
+              ii: rd("ii"), ipiNac: rd("ipiNac"), pisNac: rd("pisNac"), cofinsNac: rd("cofinsNac"), icmsNac: rd("icmsNac"), impostosNacionalizacao: v.impNac,
+              despesasDespachante: despesas, despachanteSubtotal: v.despSub, totalCusto: v.totalCusto,
+              baseEntrada: rd("baseEntrada"), creditoIpi: rd("creditoIpi"), nfEntradaValor: rd("nfEntradaValor"),
+              pisDI: rd("pisDI"), cofinsDI: rd("cofinsDI"), icmsEntradaCred: rd("icmsEntradaCred"), ipiEntradaCred: rd("ipiEntradaCred"), creditoAdquirente: v.credAdq,
+              taxaAdmMRD: rd("taxaAdmMRD"), baseSaida: rd("baseSaida"), pisSaida: rd("pisSaida"), cofinsSaida: rd("cofinsSaida"), icmsSaida: rd("icmsSaida"), difal: rd("difal"), margemIRCSLL: rd("margemIRCSLL"), ipiSaida: rd("ipiSaida"), totalNFsaida: v.totalSaida,
+              nfMRD: rd("nfMRD"), adiantamento: rd("adiantamento"), cifMercFrete: v.cif, saldoNFe: v.saldoNFe, prestacaoServMRD: rd("prestacaoServMRD"), saldoFavorMRD: v.saldoFav,
+              rawRows: null
+            };
+            Store.update("processos", p._id, { custo: novo });
+            UI.toast("Custos salvos."); rerender();
+          } }
+      ]
+    });
+  }
+
+  /* ----------------------------- DASHBOARD ----------------------------- */
+  Views.dashboard = function () {
+    var d = Calc.dashboard(s());
+    var wrap = el("div");
+
+    // valores da DRE (conferência) para os indicadores
+    var dre = s().dre;
+    function drRightRow(lbl) { return (dre && dre.right ? dre.right : []).filter(function (x) { return x.label.toLowerCase().trim() === lbl; })[0]; }
+    function drRight(lbl) { var r = drRightRow(lbl); return r ? r.value : null; }
+    function drNorm(s) { return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+    function drLeft(sub) { if (!dre || !dre.left) return null; var r = dre.left.filter(function (x) { return drNorm(x.label).indexOf(sub) >= 0; })[0]; return r ? r.value : null; }
+    var lucroAkos = drRight("lucro");
+    var lucroLiquido = drLeft("lucro liquido");
+    var lucroContainer = drLeft("lucro por container");
+    var lucroOperacao = (lucroLiquido != null) ? lucroLiquido : lucroAkos;
+    // Saldo de NF-e da MRD = (NF MRD − adiantamento − CIF) por processo, somado
+    var saldoNFeMRD = s().processos.reduce(function (a, p) {
+      var c = p.custo || {};
+      return a + (Calc.n(c.nfMRD) - Calc.n(c.adiantamento) - Calc.n(c.valorCIF));
+    }, 0);
+    var cam = s().cambio || [];
+    var camRealizado = cam.reduce(function (a, c) { return a + Calc.n(c.cambioRealizado); }, 0);
+    var camRealCount = cam.filter(function (c) { return Calc.n(c.cambioRealizado) > 0; }).length;
+
+    // KPIs — linha 1
+    wrap.appendChild(el("div", { class: "kpi-grid" }, [
+      UI.kpi("Faturamento total", brl(d.faturamento), { kind: "primary", sub: d.nProcessos + " processos" }),
+      UI.kpi("Recebido", brl(d.recebido), { kind: "ok", sub: Fmt.pct(d.pctRecebido) + " dos boletos recebido" }),
+      UI.kpi("A receber", brl(d.aReceber), { kind: "info", sub: d.boletosAbertos + " boletos em aberto", onclick: function () { go("#/boletos"); } }),
+      UI.kpi("Lucro da Operação", brl(lucroOperacao), { kind: "primary", sub: lucroContainer != null ? brl(lucroContainer) + " por container" : null, onclick: function () { go("#/dre"); } })
+    ]));
+
+    // KPIs — linha 2
+    wrap.appendChild(el("div", { class: "kpi-grid" }, [
+      UI.kpi("Adiantamentos (AKOS→MRD)", brl(d.adiantamento), {}),
+      UI.kpi("Saldo de Nf-e (MRD)", brl(saldoNFeMRD), { sub: "NF entrada MRD − Adiantamento − Valor CIF", onclick: function () { go("#/processos"); } }),
+      UI.kpi("Boletos vencidos", String(d.boletosVencidos), { kind: d.boletosVencidos ? "danger" : "muted", sub: brl(d.valorVencidos), onclick: function () { go("#/boletos?status=vencido"); } }),
+      UI.kpi("Câmbio realizado", brl(camRealizado), { kind: camRealizado ? "ok" : "muted", sub: camRealCount + " de " + cam.length + " processos", onclick: function () { go("#/cambio"); } })
+    ]));
+
+    // recebimento por processo (barras)
+    var rows = s().processos.map(function (p) { return Calc.resumoProc(s(), p); });
+    var maxFat = Math.max.apply(null, rows.map(function (r) { return r.faturamento; }).concat([1]));
+    var barList = el("div", { class: "bars" }, rows.map(function (r) {
+      var pct = r.faturamento ? Math.round(r.recebido / r.faturamento * 100) : 0;
+      return el("div", { class: "bar-row clickable", onclick: function () { go("#/processos/" + encodeURIComponent(r.processo.id)); } }, [
+        el("div", { class: "bar-label" }, r.processo.id),
+        el("div", { class: "bar-track", title: pct + "% recebido" }, [
+          el("div", { class: "bar-fill", style: { width: Math.round(r.faturamento / maxFat * 100) + "%" } }),
+          el("div", { class: "bar-fill bar-fill-rec", style: { width: Math.round(r.recebido / maxFat * 100) + "%" } })
+        ]),
+        el("div", { class: "bar-val" }, brl(r.faturamento)),
+        el("div", { class: "bar-pct " + (pct >= 100 ? "ok" : pct > 0 ? "info" : "muted") }, pct + "%")
+      ]);
+    }));
+    wrap.appendChild(UI.section("Faturamento × Recebimento por processo", barList));
+
+    // ---- boletos vencidos (se houver) ----
+    var venc = s().boletos.filter(function (b) { return Calc.statusBoleto(b) === "vencido"; }).sort(byVenc);
+    if (venc.length) {
+      wrap.appendChild(UI.section("⚠ Boletos vencidos (" + venc.length + ")", UI.table(boletoCols(true), venc, { dense: true, onRowClick: function (b) { abrirBoleto(b); } })));
+    }
+    return wrap;
+  };
+
+  /* ----------------------------- PROCESSOS ----------------------------- */
+  Views.processos = function () {
+    var wrap = el("div");
+    var st = { busca: "" };
+
+    var busca = el("input", { class: "inp", placeholder: "Buscar por processo, BL/AWB ou cliente…", oninput: function (e) { st.busca = e.target.value.toLowerCase().trim(); render(); } });
+    var filtros = el("div", { class: "filters" }, [
+      el("label", { class: "field" }, [el("span", { class: "field-label" }, "Buscar"), busca])
+    ]);
+
+    var cols = [
+      { key: "id", label: "Processo", render: function (r) { return "<strong>" + esc(r.processo.id) + "</strong>"; } },
+      { key: "bl", label: "BL/AWB", render: function (r) { return esc(r.processo.blAwb || "—"); } },
+      { key: "abrir", label: "", align: "right", render: function () { return "<span class='link-mini'>abrir →</span>"; } }
+    ];
+
+    var head = el("h3", { class: "sub-title" }, "");
+    var body = el("div");
+
+    function render() {
+      UI.clear(body);
+      var rows = s().processos.map(function (p) { return { processo: p }; });
+      if (st.busca) {
+        rows = rows.filter(function (r) {
+          var clientes = Calc.itensDoProc(s(), r.processo.id).map(function (i) { return i.cliente; }).filter(Boolean).join(" ");
+          var hay = ((r.processo.id || "") + " " + (r.processo.blAwb || "") + " " + clientes).toLowerCase();
+          return hay.indexOf(st.busca) >= 0;
+        });
+      }
+      head.textContent = rows.length + " processo(s)";
+      body.appendChild(UI.table(cols, rows, {
+        onRowClick: function (r) { go("#/processos/" + encodeURIComponent(r.processo.id)); },
+        emptyMsg: "Nenhum processo encontrado."
+      }));
+    }
+
+    wrap.appendChild(UI.section("Processos de importação", el("div", null, [filtros, head, body]), [
+      el("button", { class: "btn btn-primary", onclick: novoProcesso }, "+ Novo processo")
+    ]));
+    wrap.appendChild(el("p", { class: "hint" }, "Clique em um processo para ver todos os dados: faturamento, recebido, a receber, custos, boletos e câmbio."));
+    render();
+    return wrap;
+  };
+
+  Views.processoDetail = function (id) {
+    var p = s().processos.filter(function (x) { return x.id === id; })[0];
+    var wrap = el("div");
+    if (!p) { wrap.appendChild(el("p", null, "Processo não encontrado.")); return wrap; }
+    var r = Calc.resumoProc(s(), p);
+    var cust = p.custo || {};
+
+    wrap.appendChild(el("div", { class: "crumb" }, [
+      el("a", { href: "#/processos" }, "← Processos"), el("span", null, " / " + p.id)
+    ]));
+
+    // KPIs do processo
+    wrap.appendChild(el("div", { class: "kpi-grid" }, [
+      UI.kpi("Faturamento", brl(r.faturamento), { kind: "primary" }),
+      UI.kpi("Recebido", brl(r.recebido), { kind: "ok" }),
+      UI.kpi("A receber", brl(r.aReceber), { kind: r.aReceber > 0 ? "info" : "muted" }),
+      UI.kpi("Saldo a favor MRD", brl(r.saldoFavorMRD), {})
+    ]));
+
+    // dados do processo
+    var info = el("div", { class: "info-grid" }, [
+      infoItem("BL/AWB", p.blAwb), infoItem("Data do processo", Fmt.date(p.dataProc)),
+      infoItem("NF-e MRD", p.nfeMRD), infoItem("Valor NF-e MRD", brl(p.valorNfeMRD)),
+      infoItem("CFOP", p.cfop), infoItem("Natureza", p.natureza), infoItem("UF", p.uf),
+      infoItem("Adiantamento (AKOS→MRD)", brl(r.adiantamento)),
+      infoItem("CIF", brl(cust.valorCIF)), infoItem("Saldo de NF-e", brl(cust.saldoNFe)),
+      infoItem("Taxa adm. MRD", brl(r.taxaAdm))
+    ]);
+    wrap.appendChild(UI.section("Dados do processo", info, [
+      el("button", { class: "btn", onclick: function () { editarProcesso(p); } }, "✎ Editar")
+    ]));
+
+    // NF-e / clientes
+    var itens = Calc.itensDoProc(s(), id);
+    var itCols = [
+      { key: "nfe", label: "NF-e" },
+      { key: "cliente", label: "Cliente" },
+      { key: "valorProduto", label: "Valor produto", align: "right", render: function (i) { return brl(i.valorProduto); } },
+      { key: "valorTotal", label: "Valor total", align: "right", render: function (i) { return brl(i.valorTotal); } },
+      { key: "boletoASaldoNFe", label: "Boleto A (Saldo NF-e)", align: "right", render: function (i) { return brl(i.boletoASaldoNFe); } },
+      { key: "comissao5", label: "Comissão 5%", align: "right", render: function (i) { return brl(i.comissao5); } }
+    ];
+    wrap.appendChild(UI.section("NF-e / Clientes (" + itens.length + ")",
+      UI.table(itCols, itens, { dense: true, onRowClick: function (it) { editarItem(it); } }),
+      [el("button", { class: "btn btn-primary", onclick: function () { novoItem(id); } }, "+ Adicionar NF-e")]));
+
+    // Boletos do processo
+    var bol = Calc.boletosDoProc(s(), id).sort(byVenc);
+    wrap.appendChild(UI.section("Boletos (" + bol.length + ")",
+      UI.table(boletoCols(false), bol, { dense: true, onRowClick: function (b) { abrirBoleto(b); } })));
+
+    // Câmbio
+    var cam = Calc.cambioDoProc(s(), id);
+    if (cam.length) wrap.appendChild(UI.section("Câmbio", UI.table(cambioCols(), cam, { dense: true, onRowClick: function (c) { editarCambio(c); } })));
+
+    // NF de Saída (emitidas pela AKOS) deste processo
+    var nfSaida = (s().nfEmitidas || []).filter(function (n) { return n.processoId === id; });
+    var colsS = [
+      { key: "numero", label: "Nº NF" },
+      { key: "emissao", label: "Emissão", render: function (n) { return Fmt.date(n.emissao); } },
+      { key: "destinatario", label: "Destinatário" },
+      { key: "valorProduto", label: "Produtos", align: "right", render: function (n) { return brl(n.valorProduto); } },
+      { key: "valorNF", label: "Valor NF-e", align: "right", render: function (n) { return brl(n.valorNF); } },
+      { key: "ipi", label: "IPI", align: "right", render: function (n) { return brl(n.ipi); } },
+      { key: "icms", label: "ICMS", align: "right", render: function (n) { return brl(n.icms); } },
+      { key: "pis", label: "PIS", align: "right", render: function (n) { return brl(n.pis); } },
+      { key: "cofins", label: "COFINS", align: "right", render: function (n) { return brl(n.cofins); } }
+    ];
+    wrap.appendChild(UI.section("NF de Saída — emitidas pela AKOS (" + nfSaida.length + ")",
+      UI.table(colsS, nfSaida, { dense: true, emptyMsg: "Nenhuma NF de saída vinculada a este processo.", onRowClick: function (n) { editarNfEmitida(n); } }),
+      [el("button", { class: "btn btn-primary", onclick: function () { novoNfEmitida(id); } }, "+ Adicionar NF de saída")]));
+
+    // NF de Entrada (importação) deste processo
+    var nfx = (s().nfEntrada || []).filter(function (n) { return n.processoId === id; });
+    var colsX = [
+      { key: "numero", label: "Nº NF" },
+      { key: "emissao", label: "Emissão", render: function (n) { return Fmt.date(n.emissao); } },
+      { key: "cliente", label: "Cliente" },
+      { key: "valorProduto", label: "Produtos", align: "right", render: function (n) { return brl(n.valorProduto); } },
+      { key: "valorTotal", label: "Valor Total", align: "right", render: function (n) { return brl(n.valorTotal); } },
+      { key: "ipi", label: "IPI", align: "right", render: function (n) { return brl(n.ipi); } },
+      { key: "icms", label: "ICMS", align: "right", render: function (n) { return brl(n.icms); } }
+    ];
+    wrap.appendChild(UI.section("NF de Entrada — importação, emitidas pela MRD (" + nfx.length + ")",
+      UI.table(colsX, nfx, { dense: true, emptyMsg: "Nenhuma NF de entrada vinculada a este processo.", onRowClick: function (n) { editarNfEntrada(n); } }),
+      [el("button", { class: "btn btn-primary", onclick: function () { novoNfEntrada(id); } }, "+ Adicionar NF de entrada")]));
+
+    // Custo de importação (agrupado por categoria, editável)
+    wrap.appendChild(custoSectionNode(p));
+    return wrap;
+  };
+
+  /* ----------------------------- BOLETOS ----------------------------- */
+  Views.boletos = function (query) {
+    var wrap = el("div");
+    var st = { status: query.status || "todos", tipo: query.tipo || "todos", proc: query.proc || "", busca: "" };
+
+    // seletor de processo (principal) — só mostra os boletos depois de escolher um processo
+    var procIds = s().processos.map(function (p) { return p.id; });
+    var procSel = el("select", { class: "inp", onchange: function (e) { st.proc = e.target.value; render(); } }, [
+      el("option", { value: "", selected: st.proc === "" ? "selected" : null }, "— escolha um processo —"),
+      el("option", { value: "todos", selected: st.proc === "todos" ? "selected" : null }, "Todos os processos")
+    ].concat(procIds.map(function (id) { return el("option", { value: id, selected: id === st.proc ? "selected" : null }, id); })));
+    var selProc = el("label", { class: "field" }, [el("span", { class: "field-label" }, "Processo"), procSel]);
+
+    var selStatus = selectFilter("Status", ["todos", "aberto", "vencido", "vence-breve", "pago"], st.status, function (v) { st.status = v; render(); });
+    var tipos = ["todos"].concat(["Saldo NFe", "Câmbio", "Registro"]);
+    var selTipo = selectFilter("Tipo", tipos, st.tipo, function (v) { st.tipo = v; render(); });
+    var busca = el("input", { class: "inp", placeholder: "Buscar cliente / NF / observação...", oninput: function (e) { st.busca = e.target.value.toLowerCase(); render(); } });
+
+    var filtros = el("div", { class: "filters" });
+    filtros.appendChild(selProc); filtros.appendChild(selStatus); filtros.appendChild(selTipo);
+    filtros.appendChild(el("label", { class: "field" }, [el("span", { class: "field-label" }, "Busca"), busca]));
+
+    var body = el("div");
+    var card = UI.section("Contas a receber — Boletos", el("div", null, [filtros, body]), [
+      el("button", { class: "btn btn-primary", onclick: function () { novoBoleto(st.proc && st.proc !== "todos" ? st.proc : null); } }, "+ Novo boleto")
+    ]);
+    wrap.appendChild(card);
+
+    function render() {
+      UI.clear(body);
+      if (st.proc === "") {
+        body.appendChild(el("div", { class: "empty" }, "Escolha um processo acima para ver os boletos que o compõem — ou selecione \"Todos os processos\"."));
+        return;
+      }
+      var list = s().boletos.filter(function (b) {
+        if (st.status !== "todos" && Calc.statusBoleto(b) !== st.status) return false;
+        if (st.tipo !== "todos" && Calc.normTipo(b.tipo) !== st.tipo) return false;
+        if (st.proc !== "todos" && b.processoId !== st.proc) return false;
+        if (st.busca) {
+          var hay = ((b.cliente || "") + " " + (b.nfParcela || "") + " " + (b.descricao || "") + " " + (b.observacao || "")).toLowerCase();
+          if (hay.indexOf(st.busca) < 0) return false;
+        }
+        return true;
+      }).sort(byVenc);
+
+      var tot = list.reduce(function (a, b) { return a + Calc.n(b.valor); }, 0);
+      var totRec = list.filter(Calc.pago).reduce(function (a, b) { return a + Calc.valorRecebidoBoleto(b); }, 0);
+      var totAb = list.filter(function (b) { return !Calc.pago(b); }).reduce(function (a, b) { return a + Calc.n(b.valor); }, 0);
+      var foot = el("tr", { class: "foot" }, [
+        el("td", { colspan: 5 }, list.length + " boletos"),
+        el("td", { class: "t-right" }, brl(tot)),
+        el("td", { class: "t-center" }, ""),
+        el("td", { class: "t-right", title: "Recebido" }, brl(totRec)),
+        el("td", { class: "t-right", title: "Em aberto" }, brl(totAb)),
+        el("td", {}, "")
+      ]);
+      body.appendChild(UI.table(boletoColsFull(), list, { dense: true, footer: foot, emptyMsg: "Nenhum boleto para este filtro.", onRowClick: function (b) { abrirBoleto(b); } }));
+    }
+    render();
+    return wrap;
+  };
+
+  /* ----------------------------- CÂMBIO ----------------------------- */
+  Views.cambio = function (query) {
+    var wrap = el("div");
+    var st = { proc: (query && query.proc) || "todos", pago: "todos" };
+    var procs = ["todos"].concat(s().processos.map(function (p) { return p.id; }));
+
+    var cols = [
+      { key: "dataFechamento", label: "Data", render: function (c) { return Fmt.date(c.dataFechamento); } },
+      { key: "processoId", label: "Processo", render: function (c) { return "<strong>" + c.processoId + "</strong>"; } },
+      { key: "boletoB", label: "Boleto B", align: "right", render: function (c) { return brl(c.boletoB); } },
+      { key: "pagos", label: "Pago", align: "center", render: function (c) { return (c.pagos || "").toLowerCase() === "sim" ? UI.badge("Sim", "ok").outerHTML : UI.badge("Não", "muted").outerHTML; } },
+      { key: "cambioRealizado", label: "Valor BRL", align: "right", render: function (c) { return c.cambioRealizado ? brl(c.cambioRealizado) : UI.badge("Pendente", "warn").outerHTML; } },
+      { key: "taxaCambial", label: "Taxa câmbial", align: "right", render: function (c) { return c.taxaCambial != null ? Fmt.num(c.taxaCambial, 4) : "—"; } },
+      { key: "valorUSD", label: "Valor USD", align: "right", render: function (c) { return c.valorUSD != null ? "US$ " + Fmt.num(c.valorUSD, 2) : "—"; } },
+      { key: "contratoCambio", label: "Nº Contrato", render: function (c) { return c.contratoCambio || "—"; } },
+      { key: "diferenca", label: "Diferença", align: "right", render: function (c) { return c.diferenca != null ? brl(c.diferenca) : "—"; } }
+    ];
+
+    var filtros = el("div", { class: "filters" }, [
+      selectFilter("Processo", procs, st.proc, function (v) { st.proc = v; render(); }),
+      selectFilter("Pago", ["todos", "Sim", "Não"], st.pago, function (v) { st.pago = v; render(); })
+    ]);
+    var body = el("div");
+    wrap.appendChild(UI.section("Controle de câmbio (AKOS × MRD)", el("div", null, [filtros, body]), [
+      el("button", { class: "btn", onclick: function () { window.IO.exportExcel(s()); } }, "⬇ Exportar Excel")
+    ]));
+
+    function render() {
+      var list = s().cambio.filter(function (c) {
+        if (st.proc !== "todos" && c.processoId !== st.proc) return false;
+        if (st.pago !== "todos") {
+          var pg = (c.pagos || "").toLowerCase() === "sim" ? "Sim" : "Não";
+          if (pg !== st.pago) return false;
+        }
+        return true;
+      });
+      var totB = list.reduce(function (a, c) { return a + Calc.n(c.boletoB); }, 0);
+      var totC = list.reduce(function (a, c) { return a + Calc.n(c.cambioRealizado); }, 0);
+      var totUSD = list.reduce(function (a, c) { return a + Calc.n(c.valorUSD); }, 0);
+      var totDif = list.reduce(function (a, c) { return a + Calc.n(c.diferenca); }, 0);
+      var foot = el("tr", { class: "foot" }, [
+        el("td", null, list.length + " proc."), el("td", {}, ""), el("td", { class: "t-right" }, brl(totB)), el("td", {}, ""),
+        el("td", { class: "t-right" }, brl(totC)), el("td", {}, ""), el("td", { class: "t-right" }, "US$ " + Fmt.num(totUSD, 2)),
+        el("td", {}, ""), el("td", { class: "t-right" }, brl(totDif))
+      ]);
+      UI.clear(body);
+      body.appendChild(UI.table(cols, list, { onRowClick: function (c) { editarCambio(c); }, footer: foot, emptyMsg: "Nenhum câmbio para o filtro." }));
+    }
+    render();
+    return wrap;
+  };
+
+  /* ----------------------------- NOTAS FISCAIS ----------------------------- */
+  Views.notas = function (query) {
+    var wrap = el("div");
+    var emit = s().nfEmitidas || [];
+    var entr = s().nfEntrada || [];
+    if (!emit.length && !entr.length) {
+      wrap.appendChild(UI.section("Notas Fiscais", el("div", { class: "empty" },
+        "Nenhuma nota fiscal carregada. Use a planilha 'Notas Fiscais' e sincronize em Dados / Backup.")));
+      return wrap;
+    }
+    var st = { tipo: "todos", proc: (query && query.proc) || "todos", busca: "" };
+    var procs = ["todos"].concat(s().processos.map(function (p) { return p.id; }));
+
+    var busca = el("input", { class: "inp", placeholder: "Buscar nº da nota / processo…", oninput: function (e) { st.busca = e.target.value.toLowerCase().trim(); render(); } });
+    var filtro = el("div", { class: "filters" }, [
+      selectFilter("Tipo de nota", ["todos", "Entrada (MRD)", "Saída (AKOS)"], st.tipo, function (v) { st.tipo = v; render(); }),
+      selectFilter("Processo", procs, st.proc, function (v) { st.proc = v; render(); }),
+      el("label", { class: "field" }, [el("span", { class: "field-label" }, "Busca"), busca])
+    ]);
+    var body = el("div");
+    wrap.appendChild(UI.section("Notas Fiscais", el("div", null, [filtro, body]), [
+      el("button", { class: "btn btn-primary", onclick: function () { importarNfPDF(); } }, "📄 Importar PDF da NF"),
+      el("button", { class: "btn", onclick: function () { window.IO.exportExcel(s()); } }, "⬇ Exportar Excel")
+    ]));
+
+    function match(n) {
+      if (st.proc !== "todos" && n.processoId !== st.proc) return false;
+      if (st.busca) {
+        var hay = ((n.numero || "") + " " + (n.processoId || "") + " " + (n.destinatario || n.cliente || "")).toLowerCase();
+        if (hay.indexOf(st.busca) < 0) return false;
+      }
+      return true;
+    }
+    function sumf(arr, k) { return arr.reduce(function (a, x) { return a + Calc.n(x[k]); }, 0); }
+
+    function render() {
+      UI.clear(body);
+      var showSaida = (st.tipo === "todos" || st.tipo === "Saída (AKOS)");
+      var showEntrada = (st.tipo === "todos" || st.tipo === "Entrada (MRD)");
+      var e = emit.filter(match), x = entr.filter(match);
+
+      if (showSaida) {
+        var colsE = [
+          { key: "emissao", label: "Emissão", render: function (n) { return Fmt.date(n.emissao); } },
+          { key: "numero", label: "Nº NF" },
+          { key: "processoId", label: "Proc." },
+          { key: "destinatario", label: "Destinatário" },
+          { key: "valorProduto", label: "Produtos", align: "right", render: function (n) { return brl(n.valorProduto); } },
+          { key: "valorNF", label: "Valor NF-e", align: "right", render: function (n) { return brl(n.valorNF); } },
+          { key: "ipi", label: "IPI", align: "right", render: function (n) { return brl(n.ipi); } },
+          { key: "icms", label: "ICMS", align: "right", render: function (n) { return brl(n.icms); } },
+          { key: "pis", label: "PIS", align: "right", render: function (n) { return brl(n.pis); } },
+          { key: "cofins", label: "COFINS", align: "right", render: function (n) { return brl(n.cofins); } },
+          { key: "ncm", label: "NCM", render: function (n) { return n.ncm ? escTxt(n.ncm) : "—"; } }
+        ];
+        var footE = el("tr", { class: "foot" }, [
+          el("td", { colspan: 4 }, e.length + " nota(s)"),
+          el("td", { class: "t-right" }, brl(sumf(e, "valorProduto"))), el("td", { class: "t-right" }, brl(sumf(e, "valorNF"))),
+          el("td", { class: "t-right" }, brl(sumf(e, "ipi"))), el("td", { class: "t-right" }, brl(sumf(e, "icms"))),
+          el("td", { class: "t-right" }, brl(sumf(e, "pis"))), el("td", { class: "t-right" }, brl(sumf(e, "cofins"))),
+          el("td", {}, "")
+        ]);
+        body.appendChild(subHead("NF de Saída (emitidas pela AKOS)", el("button", { class: "btn btn-sm btn-primary", onclick: function () { novoNfEmitida(); } }, "+ Adicionar NF de saída")));
+        body.appendChild(UI.table(colsE, e, { dense: true, footer: footE, emptyMsg: "Nenhuma nota de saída para o filtro.", onRowClick: function (n) { editarNfEmitida(n); } }));
+      }
+
+      if (showEntrada) {
+        var colsX = [
+          { key: "emissao", label: "Emissão", render: function (n) { return Fmt.date(n.emissao); } },
+          { key: "numero", label: "Nº NF" },
+          { key: "processoId", label: "Proc." },
+          { key: "cliente", label: "Cliente" },
+          { key: "valorProduto", label: "Produtos", align: "right", render: function (n) { return brl(n.valorProduto); } },
+          { key: "valorTotal", label: "Valor Total", align: "right", render: function (n) { return brl(n.valorTotal); } },
+          { key: "ipi", label: "IPI", align: "right", render: function (n) { return brl(n.ipi); } },
+          { key: "icms", label: "ICMS", align: "right", render: function (n) { return brl(n.icms); } },
+          { key: "pis", label: "PIS", align: "right", render: function (n) { return brl(n.pis); } },
+          { key: "ncm", label: "NCM", render: function (n) { return n.ncm ? escTxt(n.ncm) : "—"; } }
+        ];
+        var footX = el("tr", { class: "foot" }, [
+          el("td", { colspan: 4 }, x.length + " nota(s)"),
+          el("td", { class: "t-right" }, brl(sumf(x, "valorProduto"))), el("td", { class: "t-right" }, brl(sumf(x, "valorTotal"))),
+          el("td", { class: "t-right" }, brl(sumf(x, "ipi"))), el("td", { class: "t-right" }, brl(sumf(x, "icms"))),
+          el("td", { class: "t-right" }, brl(sumf(x, "pis"))), el("td", {}, "")
+        ]);
+        body.appendChild(subHead("NF de Entrada (emitidas pela MRD)", el("button", { class: "btn btn-sm btn-primary", onclick: function () { novoNfEntrada(); } }, "+ Adicionar NF de entrada")));
+        body.appendChild(UI.table(colsX, x, { dense: true, footer: footX, emptyMsg: "Nenhuma nota de entrada para o filtro.", onRowClick: function (n) { editarNfEntrada(n); } }));
+      }
+    }
+    render();
+    return wrap;
+  };
+
+  /* ----------------------------- PROCESSOS - GERAL (reprodução da aba) ----------------------------- */
+  var GERAL_COLS = [
+    { h: "DATA PROC", lvl: "p", f: "dataProc", type: "date" },
+    { h: "NFE MRD", lvl: "p", f: "nfeMRD", type: "text" },
+    { h: "VALOR NFE MRD", lvl: "p", f: "valorNfeMRD", type: "money", tot: true },
+    { h: "EMISSÃO", lvl: "it", f: "emissao", type: "date" },
+    { h: "NFe", lvl: "it", f: "nfe", type: "text" },
+    { h: "CLIENTE", lvl: "it", f: "cliente", type: "text" },
+    { h: "VALOR PRODUTO", lvl: "it", f: "valorProduto", type: "money", tot: true },
+    { h: "VALOR TOTAL", lvl: "it", f: "valorTotal", type: "money", tot: true },
+    { h: "BOLETO A / SALDO NFE", lvl: "it", f: "boletoASaldoNFe", type: "money", tot: true },
+    { h: "BL / AWB", lvl: "p", f: "blAwb", type: "text" },
+    { h: "PROCESSO", lvl: "p", f: "id", type: "text" },
+    { h: "CFOP", lvl: "p", f: "cfop", type: "text" },
+    { h: "NATUREZA", lvl: "p", f: "natureza", type: "text" },
+    { h: "UF", lvl: "p", f: "uf", type: "text" },
+    { h: "VALOR REC. MRD", lvl: "p", f: "valorRecMRD", type: "money", tot: true },
+    { h: "VALOR REC. AKOS", lvl: "p", f: "valorRecAKOS", type: "money", tot: true },
+    { h: "DIF MRD X AKOS", lvl: "p", f: "difMRDxAKOS", type: "money", tot: true },
+    { h: "VALOR AKOS X MRD", lvl: "p", f: "valorAKOSxMRD", type: "money", tot: true },
+    { h: "DIF AKOS X MRD", lvl: "p", f: "difAKOSxMRD", type: "money", tot: true },
+    { h: "SALDO NFe E", lvl: "it", f: "saldoNFeE", type: "money", tot: true },
+    { h: "CRÉDITO", lvl: "it", f: "credito", type: "money", tot: true },
+    { h: "SALDO", lvl: "it", f: "saldo", type: "money" },
+    { h: "BOL. A", lvl: "it", f: "bolAStatus", type: "text" },
+    { h: "PAGO MRD", lvl: "it", f: "pagoMRDStatus", type: "text" },
+    { h: "COMISSÃO 5%", lvl: "it", f: "comissao5", type: "money", tot: true },
+    { h: "DÉBITO", lvl: "it", f: "debito", type: "money", tot: true },
+    { h: "COMISSÃO - DEB", lvl: "it", f: "comissaoDeb", type: "money", tot: true },
+    { h: "TX ADM MRD", lvl: "p", f: "txAdmMRD", type: "money", tot: true },
+    { h: "NFS", lvl: "p", f: "nfsMRD", type: "text" },
+    { h: "PAGO", lvl: "p", f: "txAdmPago", type: "text" }
+  ];
+
+  function esc(v) { return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function geralCell(row, c) {
+    var obj = c.lvl === "p" ? row.p : row.it;
+    if (c.lvl === "p" && !row.first) return "";   // imita célula mesclada (só na 1ª linha do processo)
+    if (!obj) return "";
+    var v = obj[c.f];
+    if (v === null || v === undefined || v === "") return "";
+    if (c.type === "money") {
+      var m = brl(v);
+      return (typeof v === "number" && v < 0) ? "<span class='neg'>" + m + "</span>" : m;
+    }
+    if (c.type === "date") return Fmt.date(v);
+    return esc(v);
+  }
+
+  Views.geral = function (query) {
+    var wrap = el("div");
+    var st = { proc: (query && query.proc) || "todos", busca: "" };
+    var procs = ["todos"].concat(s().processos.map(function (p) { return p.id; }));
+
+    var busca = el("input", { class: "inp", placeholder: "Buscar cliente / NF…", oninput: function (e) { st.busca = e.target.value.toLowerCase(); render(); } });
+    var filtros = el("div", { class: "filters" }, [
+      selectFilter("Processo", procs, st.proc, function (v) { st.proc = v; render(); }),
+      el("label", { class: "field" }, [el("span", { class: "field-label" }, "Busca"), busca])
+    ]);
+
+    var cols = GERAL_COLS.map(function (c) {
+      return { label: c.h, align: c.type === "money" ? "right" : null, render: function (row) { return geralCell(row, c); } };
+    });
+
+    var body = el("div");
+    var head = el("h3", { class: "sub-title" }, "");
+    wrap.appendChild(UI.section("PROCESSOS - GERAL", el("div", null, [filtros, head, body]), [
+      el("button", { class: "btn", onclick: function () { window.IO.exportExcel(s()); } }, "⬇ Exportar Excel")
+    ]));
+    wrap.appendChild(el("p", { class: "hint" }, "Reprodução da aba PROCESSOS - GERAL da planilha. Os campos do processo aparecem na primeira linha de cada grupo. Use o filtro por processo ou a busca; os totais consideram o que está filtrado. Clique numa linha para abrir o processo."));
+
+    function fmtVal(c, obj) {
+      var v = obj ? obj[c.f] : null;
+      if (v === null || v === undefined || v === "") return null;
+      if (c.type === "money") return { txt: brl(v), neg: (typeof v === "number" && v < 0) };
+      if (c.type === "date") return { txt: Fmt.date(v) };
+      return { txt: String(v) };
+    }
+    function kvVert(colDefs, obj) {
+      var rows = colDefs.map(function (c) {
+        var r = fmtVal(c, obj);
+        if (r === null) return null;
+        return el("div", { class: "kv-vrow" }, [
+          el("span", { class: "kv-k" }, c.h),
+          el("span", { class: "kv-v" + (r.neg ? " neg" : "") }, r.txt)
+        ]);
+      }).filter(Boolean);
+      return el("div", { class: "kv-vert" }, rows.length ? rows : [el("div", { class: "muted" }, "sem dados")]);
+    }
+
+    function render() {
+      UI.clear(body);
+
+      // ---- vista VERTICAL (um processo selecionado) ----
+      if (st.proc !== "todos") {
+        var p = s().processos.filter(function (x) { return x.id === st.proc; })[0];
+        if (!p) { head.textContent = ""; body.appendChild(el("div", { class: "empty" }, "Processo não encontrado.")); return; }
+        var its = Calc.itensDoProc(s(), p.id);
+        if (st.busca) its = its.filter(function (it) { return (((it.cliente || "") + " " + (it.nfe || "")).toLowerCase().indexOf(st.busca) >= 0); });
+        head.textContent = "Processo " + p.id + " · " + its.length + " NF-e";
+        var procCols = GERAL_COLS.filter(function (c) { return c.lvl === "p"; });
+        var itemCols = GERAL_COLS.filter(function (c) { return c.lvl === "it"; });
+        body.appendChild(el("div", { class: "vert-block" }, [
+          el("h4", { class: "vert-title" }, "Dados do processo"),
+          kvVert(procCols, p),
+          el("div", { class: "vert-actions" }, [el("a", { class: "link-mini", href: "#/processos/" + encodeURIComponent(p.id) }, "abrir processo completo →")])
+        ]));
+        its.forEach(function (it) {
+          body.appendChild(el("div", { class: "vert-block" }, [
+            el("h4", { class: "vert-title" }, "NF-e " + (it.nfe || "?") + (it.cliente ? " · " + it.cliente : "")),
+            kvVert(itemCols, it)
+          ]));
+        });
+        if (!its.length) body.appendChild(el("div", { class: "empty" }, "Este processo ainda não tem NF-e cadastrada."));
+        return;
+      }
+
+      // ---- vista TABELA (todos) ----
+      var rows = [];
+      s().processos.forEach(function (p) {
+        var its = Calc.itensDoProc(s(), p.id);
+        if (st.busca) {
+          its = its.filter(function (it) {
+            var hay = ((it && it.cliente) || "") + " " + ((it && it.nfe) || "");
+            return hay.toLowerCase().indexOf(st.busca) >= 0;
+          });
+          if (!its.length) return;
+        }
+        if (!its.length) its = [null];
+        its.forEach(function (it, idx) { rows.push({ p: p, it: it, first: idx === 0 }); });
+      });
+
+      function total(c) {
+        if (c.lvl === "it") return rows.reduce(function (a, r) { return a + (r.it ? Calc.n(r.it[c.f]) : 0); }, 0);
+        return rows.filter(function (r) { return r.first; }).reduce(function (a, r) { return a + Calc.n(r.p[c.f]); }, 0);
+      }
+      var foot = el("tr", { class: "foot" }, GERAL_COLS.map(function (c, i) {
+        if (i === 0) return el("td", null, "TOTAL");
+        if (c.tot) { var tv = total(c); return el("td", { class: "t-right" + (tv < 0 ? " neg" : "") }, brl(tv)); }
+        return el("td", null, "");
+      }));
+
+      var nProc = rows.filter(function (r) { return r.first; }).length;
+      head.textContent = rows.length + " linha(s) · " + nProc + " processo(s) — selecione um processo acima para ver os detalhes organizados";
+      body.appendChild(el("div", { class: "scroll-x" }, UI.table(cols, rows, {
+        dense: true, footer: foot, emptyMsg: "Nenhuma linha para o filtro selecionado.",
+        onRowClick: function (row) { go("#/processos/" + encodeURIComponent(row.p.id)); }
+      })));
+    }
+    render();
+    return wrap;
+  };
+
+  /* ----------------------------- DRE ----------------------------- */
+  function dreTabela(rows) {
+    return el("table", { class: "grid dre" }, [el("tbody", null, rows.map(function (rw) {
+      var isHeader = (rw.value == null && rw.value2 == null);
+      var isTotal = /^\(=\)/.test(rw.label);
+      var isLucro = /lucro\s+l[ií]quido/i.test(rw.label);
+      var cls = isHeader ? "h" : (isLucro ? "total" : (isTotal ? "sub" : ""));
+      var valHtml = "";
+      if (!isHeader) {
+        var parts = [];
+        if (rw.value != null) parts.push((rw.value > 0 && rw.value < 1) ? Fmt.pct(rw.value) : brl(rw.value));
+        if (rw.value2 != null) {
+          var v2 = (rw.value2 > 0 && rw.value2 < 1) ? Fmt.pct(rw.value2) : brl(rw.value2);
+          parts.push("<span class='muted'>" + v2 + "</span>");
+        }
+        valHtml = parts.join(" &middot; ");
+      }
+      return el("tr", { class: cls }, [el("td", null, rw.label), el("td", { class: "t-right", html: valHtml })]);
+    }))]);
+  }
+
+  Views.dre = function () {
+    var dre = s().dre;
+    var wrap = el("div");
+    if (!dre || !dre.left || !dre.left.length) {
+      // fallback: calcula a partir dos custos (caso a aba DRE não exista)
+      var d = Calc.dre(s());
+      var rows = [
+        { label: "Vendas Brutas", value: d.vendasBrutas }, { label: "(-) ICMS", value: -d.icms },
+        { label: "(-) IPI", value: -d.ipi }, { label: "(-) PIS", value: -d.pis }, { label: "(-) COFINS", value: -d.cofins },
+        { label: "(-) Taxa administrativa", value: -d.taxaAdm }, { label: "(=) Vendas Líquidas", value: d.vendasLiquidas },
+        { label: "Compras (NF de entrada)", value: d.compras },
+        { label: "(-) Crédito ICMS", value: -d.credIcms }, { label: "(-) Crédito IPI", value: -d.credIpi },
+        { label: "(-) Crédito PIS", value: -d.credPis }, { label: "(-) Crédito COFINS", value: -d.credCofins },
+        { label: "(=) CMV", value: d.cmv }, { label: "(=) Lucro Bruto", value: d.lucroBruto, value2: d.margemBruta }
+      ];
+      wrap.appendChild(UI.section("DRE — Demonstrativo de Resultado (calculado)", dreTabela(rows), [
+        el("button", { class: "btn", onclick: function () { window.IO.exportExcel(s()); } }, "⬇ Exportar Excel")
+      ]));
+      wrap.appendChild(el("p", { class: "hint" }, "A aba DRE não foi encontrada na planilha; estes valores foram calculados a partir dos custos."));
+      return wrap;
+    }
+    wrap.appendChild(UI.section("DRE — Demonstrativo de Resultado", dreTabela(dre.left), [
+      el("button", { class: "btn btn-primary", onclick: function () { editarDRE(); } }, "✎ Editar DRE"),
+      el("button", { class: "btn", onclick: function () { window.IO.exportExcel(s()); } }, "⬇ Exportar Excel")
+    ]));
+    wrap.appendChild(el("p", { class: "hint" }, "Você pode editar as linhas da DRE no botão “Editar DRE”. Use “(=)” no começo do nome para destacar um total."));
+    return wrap;
+  };
+
+  // editor das linhas da DRE
+  function editarDRE() {
+    var dre = s().dre || {};
+    var left = (dre.left || []).map(function (r) { return { label: r.label, value: r.value, value2: r.value2 }; });
+    if (!left.length) {
+      var d = Calc.dre(s());
+      left = [
+        { label: "Vendas Brutas", value: d.vendasBrutas }, { label: "(=) Vendas Líquidas", value: d.vendasLiquidas },
+        { label: "(=) CMV", value: d.cmv }, { label: "(=) Lucro Bruto", value: d.lucroBruto }
+      ];
+    }
+    var listWrap = el("div", { class: "dre-edit-list" });
+    function addRow(r) {
+      r = r || { label: "", value: null, value2: null };
+      var li = el("input", { class: "inp", type: "text", placeholder: "Descrição da linha", value: r.label || "" });
+      var vi = el("input", { class: "inp t-right", type: "text", inputmode: "decimal", placeholder: "valor", value: (r.value != null ? Fmt.money(r.value) : "") });
+      var v2 = el("input", { class: "inp t-right", type: "text", inputmode: "decimal", placeholder: "% (opc.)", value: (r.value2 != null ? Fmt.num(r.value2 * (r.value2 < 1 ? 100 : 1), 2) : "") });
+      var row = el("div", { class: "dre-edit-row" });
+      var up = el("button", { class: "btn btn-sm", title: "Subir", onclick: function () { var prev = row.previousSibling; if (prev) listWrap.insertBefore(row, prev); } }, "↑");
+      var rm = el("button", { class: "btn btn-danger btn-sm", onclick: function () { listWrap.removeChild(row); } }, "✕");
+      row.appendChild(li); row.appendChild(vi); row.appendChild(v2); row.appendChild(up); row.appendChild(rm);
+      row._l = li; row._v = vi; row._v2 = v2;
+      listWrap.appendChild(row);
+    }
+    left.forEach(addRow);
+
+    var body = el("div", null, [
+      el("div", { class: "dre-edit-head" }, [el("span", null, "Descrição"), el("span", null, "Valor (R$)"), el("span", null, "% (opc.)"), el("span", null, ""), el("span", null, "")]),
+      listWrap,
+      el("button", { class: "btn btn-sm", onclick: function () { addRow(); } }, "+ Adicionar linha")
+    ]);
+
+    UI.modal("Editar DRE", body, {
+      wide: true,
+      buttons: [
+        { label: "Cancelar", kind: "ghost" },
+        { label: "Salvar DRE", kind: "primary", onClick: function () {
+            var novo = [];
+            Array.prototype.forEach.call(listWrap.querySelectorAll(".dre-edit-row"), function (r) {
+              var label = (r._l.value || "").trim();
+              if (!label) return;
+              var val = Fmt.parseNum(r._v.value);
+              var p2 = Fmt.parseNum(r._v2.value);
+              if (p2 != null && p2 > 1) p2 = p2 / 100; // % digitado como 16,92 -> 0,1692
+              novo.push({ label: label, value: val, value2: p2 });
+            });
+            if (!s().dre) s().dre = {};
+            s().dre.left = novo;
+            Store.save(); UI.toast("DRE atualizada."); rerender();
+          } }
+      ]
+    });
+  }
+
+  // separa o bloco de conferência em grupos delimitados pelas linhas-título (sem valor)
+  function groupRight(rows) {
+    var groups = [], cur = { title: null, items: [] };
+    rows.forEach(function (r) {
+      var isHeader = (r.value == null && r.value2 == null);
+      if (isHeader) {
+        if (cur.items.length || cur.title) groups.push(cur);
+        cur = { title: r.label, items: [] };
+      } else {
+        cur.items.push(r);
+      }
+    });
+    if (cur.items.length || cur.title) groups.push(cur);
+    return groups;
+  }
+
+  /* ----------------------------- FLUXO ----------------------------- */
+  Views.fluxo = function () {
+    var f = Calc.fluxo(s());
+    function line(lbl, val, cls) { return el("tr", { class: cls || "" }, [el("td", null, lbl), el("td", { class: "t-right" }, brl(val))]); }
+    var t = el("table", { class: "grid dre" }, [el("tbody", null, [
+      line("ENTRADAS", null, "h"),
+      line("Recebimentos de boletos (pagos)", f.entradasBoletos),
+      line("Adiantamentos (AKOS→MRD)", f.adiantamentos),
+      line("(=) Total de entradas", f.totalEntradas, "sub"),
+      line("SAÍDAS", null, "h"),
+      line("CIF (mercadoria + frete)", -f.saidasCIF),
+      line("Impostos de nacionalização", -f.saidasNac),
+      line("Despesas despachante", -f.saidasDesp),
+      line("(=) Total de saídas", -f.totalSaidas, "sub"),
+      line("(=) Saldo de caixa", f.saldo, "total")
+    ])]);
+    var wrap = el("div");
+    wrap.appendChild(UI.section("Fluxo de Caixa (simplificado)", t));
+    wrap.appendChild(el("p", { class: "hint" }, "Entradas = boletos efetivamente recebidos + adiantamentos. Saídas = custos de importação dos processos."));
+    return wrap;
+  };
+
+  /* ----------------------------- CLIENTES ----------------------------- */
+  Views.clientes = function () {
+    var wrap = el("div");
+    var list = (s().clientes || []).map(function (c) {
+      var itens = s().itens.filter(function (i) { return i.cliente === c.nome; });
+      var bol = s().boletos.filter(function (b) { return b.cliente === c.nome; });
+      var fat = itens.reduce(function (a, i) { return a + Calc.n(i.valorTotal); }, 0);
+      var aberto = bol.filter(function (b) { return !Calc.pago(b); }).reduce(function (a, b) { return a + Calc.n(b.valor); }, 0);
+      return { nome: c.nome, cnpj: c.cnpj, nProc: itens.map(function (i) { return i.processoId; }).filter(uniq).length, fat: fat, aberto: aberto, _id: c._id };
+    }).sort(function (a, b) { return b.fat - a.fat; });
+    var cols = [
+      { key: "nome", label: "Cliente" },
+      { key: "cnpj", label: "CNPJ", render: function (r) { return r.cnpj || "—"; } },
+      { key: "nProc", label: "Processos", align: "center" },
+      { key: "fat", label: "Faturamento", align: "right", render: function (r) { return brl(r.fat); } },
+      { key: "aberto", label: "Em aberto", align: "right", render: function (r) { return "<span class='pend'>" + brl(r.aberto) + "</span>"; } }
+    ];
+    wrap.appendChild(UI.section("Clientes (" + list.length + ")", UI.table(cols, list, {
+      onRowClick: function (r) { editarCliente(Store.find("clientes", r._id)); }
+    }), [el("button", { class: "btn btn-primary", onclick: novoCliente }, "+ Novo cliente")]));
+    return wrap;
+  };
+
+  /* ----------------------------- HISTÓRICO (log) ----------------------------- */
+  function fmtDT(iso) {
+    if (!iso) return "—";
+    var d = new Date(iso); if (isNaN(d.getTime())) return iso;
+    var p = function (x) { return String(x).padStart(2, "0"); };
+    return p(d.getDate()) + "/" + p(d.getMonth() + 1) + "/" + d.getFullYear() + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+  }
+  Views.historico = function () {
+    var wrap = el("div");
+    if (!Store.isCloud() || !window.SB) {
+      wrap.appendChild(UI.section("Histórico de alterações", el("div", { class: "empty" }, "O histórico fica disponível no modo nuvem (com login).")));
+      return wrap;
+    }
+    var body = el("div", { class: "empty" }, "Carregando histórico…");
+    wrap.appendChild(UI.section("Histórico de alterações", body, [
+      el("button", { class: "btn btn-sm", onclick: function () { rerender(); } }, "↻ Atualizar")
+    ]));
+    window.SB.listLog(500).then(function (rows) {
+      var cols = [
+        { key: "created_at", label: "Data / hora", render: function (r) { return fmtDT(r.created_at); } },
+        { key: "autor", label: "Usuário", render: function (r) { return escTxt(r.autor || "—"); } },
+        { key: "acao", label: "Ação", render: function (r) { return escTxt(r.acao || ""); } },
+        { key: "detalhe", label: "Detalhe", render: function (r) { return escTxt(r.detalhe || ""); } }
+      ];
+      UI.clear(body);
+      body.appendChild(UI.table(cols, rows, { dense: true, emptyMsg: "Nenhuma alteração registrada ainda." }));
+    }).catch(function (e) {
+      UI.clear(body);
+      body.appendChild(el("div", { class: "error-box" }, "Erro ao carregar o histórico: " + (e && e.message ? e.message : e) + " (verifique se a tabela 'audit_log' foi criada no Supabase)."));
+    });
+    return wrap;
+  };
+
+  /* ----------------------------- BACKUP / DADOS ----------------------------- */
+  Views.backup = function () {
+    var wrap = el("div");
+    var info = el("div", { class: "info-grid" }, [
+      infoItem("Processos", String(s().processos.length)),
+      infoItem("NF-e / itens", String(s().itens.length)),
+      infoItem("Boletos", String(s().boletos.length)),
+      infoItem("Câmbios", String(s().cambio.length)),
+      infoItem("Clientes", String((s().clientes || []).length)),
+      infoItem("NF emitidas", String((s().nfEmitidas || []).length)),
+      infoItem("NF de entrada", String((s().nfEntrada || []).length)),
+      infoItem("Dados migrados em", s().geradoEm || "—")
+    ]);
+    wrap.appendChild(UI.section("Resumo dos dados", info));
+
+    // ---- Backups na nuvem (modo nuvem) ----
+    if (Store.isCloud() && window.SB) {
+      var bkBody = el("div", { class: "empty" }, "Carregando backups…");
+      var bkActions = el("div", { class: "btn-row" }, [
+        el("button", { class: "btn btn-primary", onclick: function () {
+          window.SB.saveBackup(s(), Store.user()).then(function () { UI.toast("Backup criado na nuvem."); rerender(); }).catch(function (e) { UI.toast("Erro: " + (e && e.message || e), "danger"); });
+        } }, "＋ Fazer backup agora"),
+        el("button", { class: "btn", onclick: function () { UI.download("backup-mrd-" + Fmt.today() + ".json", Store.exportJSON(), "application/json"); UI.toast("Backup JSON baixado."); } }, "⬇ Baixar backup (JSON)")
+      ]);
+      wrap.appendChild(UI.section("Backups automáticos na nuvem", el("div", null, [
+        bkActions,
+        el("p", { class: "hint" }, "O sistema faz um backup automático a cada hora de uso. Você também pode criar um backup manual ou restaurar um anterior abaixo."),
+        bkBody
+      ])));
+      window.SB.listBackups(30).then(function (rows) {
+        var cols = [
+          { key: "created_at", label: "Data / hora", render: function (r) { return fmtDT(r.created_at); } },
+          { key: "autor", label: "Por", render: function (r) { return escTxt(r.autor || "—"); } },
+          { key: "acao", label: "", align: "center", render: function () { return "<span class='link-mini'>restaurar</span>"; } }
+        ];
+        UI.clear(bkBody);
+        bkBody.appendChild(UI.table(cols, rows, {
+          dense: true, emptyMsg: "Nenhum backup ainda (o primeiro é criado automaticamente ao usar o sistema).",
+          onRowClick: function (r) {
+            UI.confirmar("Restaurar este backup de " + fmtDT(r.created_at) + "? Os dados atuais serão substituídos por esta versão.", function () {
+              window.SB.getBackup(r.id).then(function (data) {
+                if (!data || !data.processos) { UI.toast("Backup inválido.", "warn"); return; }
+                Store.state = data; Store.reindex(); Store.persistNow().then(function () { Store.log("Restaurou backup", fmtDT(r.created_at)); UI.toast("Backup restaurado."); rerender(); });
+              }).catch(function (e) { UI.toast("Erro ao restaurar: " + (e && e.message || e), "danger"); });
+            }, { danger: true, okLabel: "Restaurar" });
+          }
+        }));
+      }).catch(function (e) {
+        UI.clear(bkBody);
+        bkBody.appendChild(el("div", { class: "error-box" }, "Erro ao listar backups: " + (e && e.message || e) + " (verifique se a tabela 'app_backups' foi criada no Supabase)."));
+      });
+    }
+
+    // ---- Sincronização com a planilha (apenas no modo local) ----
+    if (!Store.isCloud()) {
+    var disp = window.Sync && window.Sync.available;
+    var syncInfo = el("div", { class: "info-grid" }, [
+      infoItem("Sincronização", disp ? "Disponível (servidor ativo)" : "Indisponível (abra pelo 'Iniciar Sistema.bat')"),
+      infoItem("Última sincronização", s().lastSync ? Fmt.date(s().lastSync) + " " + (s().lastSync.substring(11, 16) || "") : "—")
+    ]);
+    var syncActions = el("div", { class: "btn-row" }, [
+      el("button", { class: "btn btn-primary", onclick: function () {
+        UI.confirmar("Isto recarrega TODOS os dados a partir das planilhas (a planilha é a fonte oficial). Suas alterações no sistema serão substituídas. Um backup automático é guardado para desfazer. Continuar?", function () {
+          window.Sync.manual();
+        }, { okLabel: "Sincronizar agora" });
+      } }, "⟳ Sincronizar com a planilha agora"),
+      el("button", { class: "btn btn-ghost", onclick: function () {
+        window.Store.undoSync().then(function (ok) {
+          if (ok) { UI.toast("Última sincronização desfeita."); rerender(); }
+          else UI.toast("Não há sincronização para desfazer.", "warn");
+        });
+      } }, "↶ Desfazer última sincronização")
+    ]);
+    wrap.appendChild(UI.section("Sincronização automática com a planilha", el("div", null, [
+      syncInfo, syncActions,
+      el("p", { class: "hint" }, "Enquanto o sistema estiver aberto, ele verifica as planilhas .xlsx desta pasta a cada 30 segundos. Quando você salvar uma alteração, aparece um aviso no topo para sincronizar. A planilha é a fonte oficial: ao sincronizar, todos os dados são recarregados a partir dela.")
+    ])));
+    }
+
+    var temSeed = !!(window.SEED_DATA && window.SEED_DATA.processos && window.SEED_DATA.processos.length);
+    var actions = el("div", { class: "btn-row" }, [
+      el("button", { class: "btn btn-primary", onclick: function () { UI.download("backup-mrd-" + Fmt.today() + ".json", Store.exportJSON(), "application/json"); UI.toast("Backup JSON gerado."); } }, "⬇ Backup completo (JSON)"),
+      el("button", { class: "btn", onclick: function () { window.IO.exportExcel(s()); } }, "⬇ Exportar relatórios (Excel)"),
+      el("button", { class: "btn btn-ghost", onclick: restaurar }, "⬆ Restaurar de backup (JSON)"),
+      temSeed ? el("button", { class: "btn btn-danger", onclick: function () {
+        UI.confirmar("Isto descarta TODAS as alterações e volta aos dados originais das planilhas. Continuar?", function () {
+          Store.resetToSeed().then(function () { UI.toast("Dados restaurados ao original."); rerender(); });
+        }, { danger: true, okLabel: "Restaurar originais" });
+      } }, "↺ Voltar aos dados originais") : null
+    ].filter(Boolean));
+    wrap.appendChild(UI.section("Backup e restauração", el("div", null, [
+      actions,
+      el("p", { class: "hint" }, Store.isCloud()
+        ? "Os dados ficam salvos automaticamente na nuvem (Supabase) e um backup é guardado a cada hora. Você também pode baixar backups em JSON quando quiser."
+        : "Os dados ficam salvos automaticamente neste navegador (IndexedDB). Faça backups JSON periódicos para não perder informações ao limpar o navegador ou trocar de máquina.")
+    ])));
+    return wrap;
+  };
+
+  /* ============================ AÇÕES / MODAIS ============================ */
+
+  function abrirBoleto(b) {
+    var pago = Calc.pago(b);
+    var body = el("div");
+    body.appendChild(el("div", { class: "info-grid" }, [
+      infoItem("Processo", b.processoId), infoItem("Cliente", b.cliente),
+      infoItem("NF/Parcela", b.nfParcela), infoItem("Tipo", Calc.normTipo(b.tipo)),
+      infoItem("Valor", brl(b.valor)), infoItem("Vencimento", Fmt.date(b.vencimento)),
+      infoItem("Status", "")
+    ]));
+    body.lastChild.lastChild.appendChild(UI.statusBadge(Calc.statusBoleto(b)));
+
+    var f = UI.form([
+      { key: "vencimento", label: "Vencimento", type: "date" },
+      { key: "valor", label: "Valor do boleto", type: "money" },
+      { key: "pago", label: "Pago?", type: "select", options: [{ value: "Não", label: "Não" }, { value: "Sim", label: "Sim" }] },
+      { key: "valorRecebido", label: "Valor recebido", type: "money" },
+      { key: "dataRecebimento", label: "Data recebimento", type: "date" },
+      { key: "cambio", label: "Câmbio fechado?", type: "select", options: [{ value: "", label: "—" }, { value: "Sim", label: "Sim" }, { value: "Não", label: "Não" }] },
+      { key: "observacao", label: "Observação (ex.: motivo da alteração do valor)", type: "textarea", wide: true }
+    ], { vencimento: b.vencimento, valor: b.valor, pago: pago ? "Sim" : "Não", valorRecebido: b.valorRecebido, dataRecebimento: b.dataRecebimento, cambio: b.cambio, observacao: b.observacao });
+    body.appendChild(el("h4", { class: "modal-sub" }, "Editar / baixar boleto"));
+    body.appendChild(f.node);
+
+    UI.modal("Boleto " + (b.nfParcela || ""), body, {
+      buttons: [
+        { label: "Excluir", kind: "danger", close: false, onClick: function () {
+            UI.confirmar("Excluir este boleto?", function () { Store.remove("boletos", b._id); UI.toast("Boleto excluído."); rerender(); }, { danger: true });
+            return false;
+          } },
+        pago ? null : { label: "Marcar como pago hoje", kind: "ok", onClick: function () {
+            Store.update("boletos", b._id, { pago: "Sim", valorRecebido: b.valorRecebido || b.valor, dataRecebimento: Fmt.today() });
+            UI.toast("Boleto baixado."); rerender();
+          } },
+        { label: "Salvar", kind: "primary", onClick: function () {
+            var v = f.read(); Store.update("boletos", b._id, v); UI.toast("Boleto atualizado."); rerender();
+          } }
+      ].filter(Boolean)
+    });
+  }
+
+  function novoBoleto(preProc) {
+    var procs = s().processos.map(function (p) { return p.id; });
+    var f = UI.form([
+      { key: "processoId", label: "Processo", type: "select", options: procs },
+      { key: "cliente", label: "Cliente", type: "text" },
+      { key: "nfParcela", label: "NF/Parcela", type: "text" },
+      { key: "tipo", label: "Tipo", type: "select", options: ["Saldo NFe", "Câmbio", "Registro"] },
+      { key: "valor", label: "Valor do boleto", type: "money" },
+      { key: "vencimento", label: "Vencimento", type: "date" },
+      { key: "observacao", label: "Observação", type: "textarea", wide: true }
+    ], { vencimento: Fmt.today(), processoId: preProc || undefined });
+    UI.modal("Novo boleto", f.node, {
+      buttons: [{ label: "Cancelar", kind: "ghost" }, { label: "Adicionar", kind: "primary", onClick: function () {
+        var v = f.read(); v.pago = "Não";
+        var proc = s().processos.filter(function (p) { return p.id === v.processoId; })[0];
+        if (proc) v.blAwb = proc.blAwb;
+        Store.add("boletos", v); UI.toast("Boleto adicionado."); rerender();
+      } }]
+    });
+  }
+
+  function editarCambio(c) {
+    var f = UI.form([
+      { key: "dataFechamento", label: "Data do fechamento", type: "date" },
+      { key: "boletoB", label: "Boleto B", type: "money" },
+      { key: "pagos", label: "Pago?", type: "select", options: [{ value: "NÃO", label: "Não" }, { value: "SIM", label: "Sim" }] },
+      { key: "cambioRealizado", label: "Valor BRL", type: "money" },
+      { key: "taxaCambial", label: "Taxa câmbial", type: "number", step: "0.0001" },
+      { key: "valorUSD", label: "Valor USD", type: "money" },
+      { key: "contratoCambio", label: "Nº Contrato", type: "text" },
+      { key: "diferenca", label: "Diferença", type: "money" }
+    ], c);
+    UI.modal("Câmbio — Processo " + c.processoId, f.node, {
+      buttons: [
+        { label: "Cancelar", kind: "ghost" },
+        { label: "Salvar", kind: "primary", onClick: function () { Store.update("cambio", c._id, f.read()); UI.toast("Câmbio atualizado."); rerender(); } }
+      ]
+    });
+  }
+
+  function editarProcesso(p) {
+    var f = UI.form([
+      { key: "id", label: "Nº do processo", type: "text" },
+      { key: "blAwb", label: "BL/AWB", type: "text" },
+      { key: "dataProc", label: "Data do processo", type: "date" },
+      { key: "nfeMRD", label: "NF-e MRD", type: "text" },
+      { key: "valorNfeMRD", label: "Valor NF-e MRD", type: "money" },
+      { key: "cfop", label: "CFOP", type: "text" },
+      { key: "natureza", label: "Natureza da operação", type: "text", wide: true },
+      { key: "uf", label: "UF", type: "text" },
+      { key: "valorAKOSxMRD", label: "Adiantamento (AKOS → MRD)", type: "money" },
+      { key: "valorRecMRD", label: "Valor recebido MRD", type: "money" },
+      { key: "valorRecAKOS", label: "Valor recebido AKOS", type: "money" }
+    ], p);
+    UI.modal("Editar processo " + p.id, f.node, {
+      buttons: [{ label: "Cancelar", kind: "ghost" }, { label: "Salvar", kind: "primary", onClick: function () {
+        Store.update("processos", p._id, f.read()); UI.toast("Processo atualizado."); rerender();
+      } }]
+    });
+  }
+
+  function editarProcessoConc(id) {
+    var p = s().processos.filter(function (x) { return x.id === id; })[0];
+    if (!p) return;
+    var f = UI.form([
+      { key: "valorRecMRD", label: "Valor rec. MRD", type: "money" },
+      { key: "valorRecAKOS", label: "Valor rec. AKOS", type: "money" },
+      { key: "difMRDxAKOS", label: "Dif. MRD×AKOS", type: "money" },
+      { key: "valorAKOSxMRD", label: "Valor AKOS→MRD (adiantamento)", type: "money" },
+      { key: "difAKOSxMRD", label: "Dif. AKOS×MRD", type: "money" }
+    ], p);
+    UI.modal("Conciliação — Processo " + id, f.node, {
+      buttons: [{ label: "Cancelar", kind: "ghost" }, { label: "Salvar", kind: "primary", onClick: function () {
+        Store.update("processos", p._id, f.read()); UI.toast("Conciliação atualizada."); rerender();
+      } }]
+    });
+  }
+
+  function novoProcesso() {
+    var f = UI.form([
+      { key: "id", label: "Nº do processo", type: "text", required: true },
+      { key: "blAwb", label: "BL/AWB", type: "text" },
+      { key: "dataProc", label: "Data do processo", type: "date" },
+      { key: "cfop", label: "CFOP", type: "text", value: "6102" },
+      { key: "natureza", label: "Natureza", type: "text", value: "Venda de Mercadoria Importada", wide: true },
+      { key: "uf", label: "UF", type: "text", value: "SP" }
+    ], { dataProc: Fmt.today() });
+    UI.modal("Novo processo", f.node, {
+      buttons: [{ label: "Cancelar", kind: "ghost" }, { label: "Criar", kind: "primary", onClick: function () {
+        var v = f.read();
+        if (!v.id) { UI.toast("Informe o número do processo.", "warn"); return false; }
+        if (s().processos.some(function (p) { return p.id === v.id; })) { UI.toast("Já existe processo com esse número.", "warn"); return false; }
+        v.custo = null; Store.add("processos", v); UI.toast("Processo criado."); go("#/processos/" + encodeURIComponent(v.id));
+      } }]
+    });
+  }
+
+  var ITEM_FIELDS = [
+    { key: "nfe", label: "NF-e (número)", type: "text" },
+    { key: "emissao", label: "Emissão", type: "date" },
+    { key: "cliente", label: "Cliente", type: "text", wide: true },
+    { key: "valorProduto", label: "Valor produto", type: "money" },
+    { key: "valorTotal", label: "Valor total", type: "money" },
+    { key: "boletoASaldoNFe", label: "Boleto A (Saldo NF-e)", type: "money" },
+    { key: "comissao5", label: "Comissão 5%", type: "money" }
+  ];
+  function editarItem(it) {
+    var f = UI.form(ITEM_FIELDS, it);
+    UI.modal("NF-e / Cliente — Processo " + it.processoId, f.node, {
+      buttons: [
+        { label: "Excluir", kind: "danger", close: false, onClick: function () {
+            UI.confirmar("Excluir esta NF-e?", function () { Store.remove("itens", it._id); UI.toast("NF-e excluída."); rerender(); }, { danger: true });
+            return false;
+          } },
+        { label: "Salvar", kind: "primary", onClick: function () { Store.update("itens", it._id, f.read()); UI.toast("NF-e atualizada."); rerender(); } }
+      ]
+    });
+  }
+  function novoItem(pid) {
+    var f = UI.form(ITEM_FIELDS, {});
+    UI.modal("Nova NF-e / Cliente — Processo " + pid, f.node, {
+      buttons: [
+        { label: "Cancelar", kind: "ghost" },
+        { label: "Adicionar", kind: "primary", onClick: function () {
+            var v = f.read(); v.processoId = pid; Store.add("itens", v); UI.toast("NF-e adicionada."); rerender();
+          } }
+      ]
+    });
+  }
+
+  function subHead(title, btn) { return el("div", { class: "sub-head" }, [el("h3", { class: "sub-title" }, title), btn]); }
+  function procOpts() { return s().processos.map(function (p) { return p.id; }); }
+
+  /* ---- Importar NF a partir do PDF (DANFE) ---- */
+  function importarNfPDF() {
+    var inp = el("input", { type: "file", accept: "application/pdf,.pdf", style: { display: "none" } });
+    inp.addEventListener("change", function () {
+      var file = inp.files && inp.files[0];
+      if (!file) return;
+      UI.toast("Lendo o PDF…");
+      window.NFPDF.fromFile(file).then(function (d) {
+        revisarNfImportada(d, file.name);
+      }).catch(function (e) {
+        UI.toast("Não consegui ler o PDF: " + (e && e.message ? e.message : e), "danger");
+      });
+    });
+    document.body.appendChild(inp); inp.click();
+    setTimeout(function () { inp.remove(); }, 1000);
+  }
+
+  // mostra o que foi extraído para o usuário conferir/corrigir antes de salvar
+  function revisarNfImportada(d, fileName) {
+    var achou = [];
+    if (d.numero) achou.push("nº " + d.numero);
+    if (d.valorNF != null) achou.push("valor da NF");
+    if (d.valorProduto != null) achou.push("produtos");
+    if (d.ncms && d.ncms.length) achou.push(d.ncms.length + " NCM");
+
+    var tipoSel = el("select", { class: "inp" }, [
+      el("option", { value: "saida" }, "NF de Saída (emitida pela AKOS)"),
+      el("option", { value: "entrada" }, "NF de Entrada (emitida pela MRD)")
+    ]);
+    var procSel = el("select", { class: "inp" }, [el("option", { value: "" }, "— selecione —")].concat(
+      procOpts().map(function (id) { return el("option", { value: id }, id); })
+    ));
+
+    var f = UI.form([
+      { key: "numero", label: "Nº da NF", type: "text" },
+      { key: "emissao", label: "Emissão", type: "date" },
+      { key: "parceiro", label: "Destinatário / Cliente", type: "text", wide: true },
+      { key: "valorProduto", label: "Valor dos produtos", type: "money" },
+      { key: "valorNF", label: "Valor total da NF", type: "money" },
+      { key: "ipi", label: "IPI", type: "money" },
+      { key: "icms", label: "ICMS", type: "money" },
+      { key: "pis", label: "PIS", type: "money" },
+      { key: "cofins", label: "COFINS", type: "money" },
+      { key: "ncm", label: "NCM(s)", type: "text", wide: true },
+      { key: "chave", label: "Chave de acesso", type: "text", wide: true }
+    ], {
+      numero: d.numero, emissao: d.emissao, parceiro: d.destinatario,
+      valorProduto: d.valorProduto, valorNF: d.valorNF, ipi: d.ipi, icms: d.icms,
+      pis: d.pis, cofins: d.cofins, ncm: d.ncm, chave: d.chave
+    });
+
+    var body = el("div", null, [
+      el("div", { class: "imp-info" }, [
+        el("strong", null, "Arquivo: "), fileName || "PDF",
+        el("br"), (achou.length ? ("Encontrei automaticamente: " + achou.join(", ") + ".") : "Não consegui identificar os campos automaticamente."),
+        el("br"), el("span", { class: "muted" }, "Confira e corrija o que precisar antes de salvar.")
+      ]),
+      el("div", { class: "form-grid" }, [
+        el("label", { class: "field" }, [el("span", { class: "field-label" }, "Tipo da nota"), tipoSel]),
+        el("label", { class: "field" }, [el("span", { class: "field-label" }, "Processo"), procSel])
+      ]),
+      f.node,
+      el("details", { class: "raw-details" }, [
+        el("summary", null, "Ver texto lido do PDF (para conferência)"),
+        el("pre", { class: "raw-pdf" }, (d.rawText || "").substring(0, 4000))
+      ])
+    ]);
+
+    UI.modal("Importar NF do PDF", body, {
+      wide: true,
+      buttons: [
+        { label: "Cancelar", kind: "ghost" },
+        { label: "Salvar nota", kind: "primary", onClick: function () {
+            var v = f.read();
+            var rec = {
+              processoId: procSel.value || null,
+              numero: v.numero, emissao: v.emissao,
+              valorProduto: v.valorProduto, ipi: v.ipi, icms: v.icms, pis: v.pis,
+              ncm: v.ncm, chave: v.chave
+            };
+            if (tipoSel.value === "saida") {
+              rec.destinatario = v.parceiro; rec.valorNF = v.valorNF; rec.cofins = v.cofins;
+              Store.add("nfEmitidas", rec);
+            } else {
+              rec.cliente = v.parceiro; rec.valorTotal = v.valorNF;
+              Store.add("nfEntrada", rec);
+            }
+            UI.toast("Nota importada e salva."); rerender();
+          } }
+      ]
+    });
+  }
+
+  function nfEmitFields() {
+    return [
+      { key: "processoId", label: "Processo", type: "select", options: procOpts() },
+      { key: "numero", label: "Nº NF", type: "text" },
+      { key: "emissao", label: "Emissão", type: "date" },
+      { key: "destinatario", label: "Destinatário (cliente)", type: "text", wide: true },
+      { key: "valorProduto", label: "Valor produtos", type: "money" },
+      { key: "valorNF", label: "Valor NF-e", type: "money" },
+      { key: "ipi", label: "IPI", type: "money" }, { key: "icms", label: "ICMS", type: "money" },
+      { key: "pis", label: "PIS", type: "money" }, { key: "cofins", label: "COFINS", type: "money" },
+      { key: "ncm", label: "NCM(s)", type: "text", wide: true },
+      { key: "chave", label: "Chave de acesso", type: "text", wide: true }
+    ];
+  }
+  function nfEntrFields() {
+    return [
+      { key: "processoId", label: "Processo", type: "select", options: procOpts() },
+      { key: "numero", label: "Nº NF", type: "text" },
+      { key: "emissao", label: "Emissão", type: "date" },
+      { key: "cliente", label: "Cliente", type: "text", wide: true },
+      { key: "valorProduto", label: "Valor produtos", type: "money" },
+      { key: "valorTotal", label: "Valor total", type: "money" },
+      { key: "ipi", label: "IPI", type: "money" }, { key: "icms", label: "ICMS", type: "money" }, { key: "pis", label: "PIS", type: "money" },
+      { key: "ncm", label: "NCM(s)", type: "text", wide: true },
+      { key: "chave", label: "Chave de acesso", type: "text", wide: true }
+    ];
+  }
+  function editarNfEmitida(nf) {
+    var f = UI.form(nfEmitFields(), nf);
+    UI.modal("NF de saída " + (nf.numero || ""), f.node, { buttons: [
+      { label: "Excluir", kind: "danger", close: false, onClick: function () { UI.confirmar("Excluir esta nota de saída?", function () { Store.remove("nfEmitidas", nf._id); UI.toast("Nota excluída."); rerender(); }, { danger: true }); return false; } },
+      { label: "Salvar", kind: "primary", onClick: function () { Store.update("nfEmitidas", nf._id, f.read()); UI.toast("Nota salva."); rerender(); } }
+    ] });
+  }
+  function novoNfEmitida(preProc) {
+    var f = UI.form(nfEmitFields(), preProc ? { processoId: preProc } : {});
+    UI.modal("Nova NF de saída", f.node, { buttons: [
+      { label: "Cancelar", kind: "ghost" },
+      { label: "Adicionar", kind: "primary", onClick: function () { Store.add("nfEmitidas", f.read()); UI.toast("Nota adicionada."); rerender(); } }
+    ] });
+  }
+  function editarNfEntrada(nf) {
+    var f = UI.form(nfEntrFields(), nf);
+    UI.modal("NF de entrada " + (nf.numero || ""), f.node, { buttons: [
+      { label: "Excluir", kind: "danger", close: false, onClick: function () { UI.confirmar("Excluir esta nota de entrada?", function () { Store.remove("nfEntrada", nf._id); UI.toast("Nota excluída."); rerender(); }, { danger: true }); return false; } },
+      { label: "Salvar", kind: "primary", onClick: function () { Store.update("nfEntrada", nf._id, f.read()); UI.toast("Nota salva."); rerender(); } }
+    ] });
+  }
+  function novoNfEntrada(preProc) {
+    var f = UI.form(nfEntrFields(), preProc ? { processoId: preProc } : {});
+    UI.modal("Nova NF de entrada", f.node, { buttons: [
+      { label: "Cancelar", kind: "ghost" },
+      { label: "Adicionar", kind: "primary", onClick: function () { Store.add("nfEntrada", f.read()); UI.toast("Nota adicionada."); rerender(); } }
+    ] });
+  }
+
+  function editarCliente(c) {
+    var f = UI.form([
+      { key: "nome", label: "Nome", type: "text", required: true },
+      { key: "cnpj", label: "CNPJ", type: "text" }
+    ], c);
+    UI.modal("Cliente", f.node, {
+      buttons: [
+        { label: "Excluir", kind: "danger", close: false, onClick: function () {
+            UI.confirmar("Excluir este cliente da lista? (não afeta processos/boletos existentes)", function () { Store.remove("clientes", c._id); UI.toast("Cliente excluído."); rerender(); }, { danger: true });
+            return false;
+          } },
+        { label: "Salvar", kind: "primary", onClick: function () { Store.update("clientes", c._id, f.read()); UI.toast("Cliente atualizado."); rerender(); } }
+      ]
+    });
+  }
+  function novoCliente() {
+    var f = UI.form([{ key: "nome", label: "Nome", type: "text", required: true }, { key: "cnpj", label: "CNPJ", type: "text" }], {});
+    UI.modal("Novo cliente", f.node, {
+      buttons: [{ label: "Cancelar", kind: "ghost" }, { label: "Adicionar", kind: "primary", onClick: function () {
+        var v = f.read(); if (!v.nome) { UI.toast("Informe o nome.", "warn"); return false; } Store.add("clientes", v); UI.toast("Cliente adicionado."); rerender();
+      } }]
+    });
+  }
+
+  function restaurar() {
+    var inp = el("input", { type: "file", accept: ".json,application/json", style: { display: "none" } });
+    inp.addEventListener("change", function () {
+      var file = inp.files[0]; if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          Store.importJSON(reader.result).then(function () { UI.toast("Backup restaurado."); rerender(); });
+        } catch (e) { UI.toast("Falha: " + e.message, "danger"); }
+      };
+      reader.readAsText(file);
+    });
+    document.body.appendChild(inp); inp.click(); setTimeout(function () { inp.remove(); }, 1000);
+  }
+
+  /* ============================ HELPERS DE COLUNA ============================ */
+  function uniq(v, i, a) { return a.indexOf(v) === i; }
+  function byVenc(a, b) { return (a.vencimento || "").localeCompare(b.vencimento || ""); }
+
+  function infoItem(label, value) {
+    return el("div", { class: "info-item" }, [el("span", { class: "info-label" }, label), el("span", { class: "info-value" }, value)]);
+  }
+  function difCell(v) {
+    if (v == null) return "—";
+    var c = Math.abs(v) > 0.005 ? "warn-text" : "muted";
+    return "<span class='" + c + "'>" + brl(v) + "</span>";
+  }
+  function selectFilter(label, options, value, onChange) {
+    var sel = el("select", { class: "inp", onchange: function (e) { onChange(e.target.value); } },
+      options.map(function (o) { return el("option", { value: o, selected: o === value ? "selected" : null }, o === "todos" ? "Todos" : o); }));
+    return el("label", { class: "field" }, [el("span", { class: "field-label" }, label), sel]);
+  }
+  function statusCell(b) { return UI.statusBadge(Calc.statusBoleto(b)).outerHTML; }
+
+  function boletoCols(showProc) {
+    var cols = [];
+    if (showProc) cols.push({ key: "processoId", label: "Processo" });
+    cols.push(
+      { key: "vencimento", label: "Vencimento", render: function (b) { return Fmt.date(b.vencimento); } },
+      { key: "cliente", label: "Cliente" },
+      { key: "nfParcela", label: "NF/Parc." },
+      { key: "tipo", label: "Tipo", render: function (b) { return Calc.normTipo(b.tipo); } },
+      { key: "valor", label: "Valor", align: "right", render: function (b) { return brl(b.valor); } },
+      { key: "status", label: "Status", align: "center", render: statusCell }
+    );
+    return cols;
+  }
+  function boletoColsFull() {
+    return [
+      { key: "vencimento", label: "Vencimento", render: function (b) { return Fmt.date(b.vencimento); } },
+      { key: "processoId", label: "Proc." },
+      { key: "cliente", label: "Cliente" },
+      { key: "nfParcela", label: "NF/Parc." },
+      { key: "tipo", label: "Tipo", render: function (b) { return Calc.normTipo(b.tipo); } },
+      { key: "valor", label: "Valor", align: "right", render: function (b) { return brl(b.valor); } },
+      { key: "status", label: "Status", align: "center", render: statusCell },
+      { key: "valorRecebido", label: "Recebido", align: "right", render: function (b) { return Calc.pago(b) ? brl(Calc.valorRecebidoBoleto(b)) : "—"; } },
+      { key: "dataRecebimento", label: "Dt. receb.", render: function (b) { return Fmt.date(b.dataRecebimento); } },
+      { key: "acao", label: "", align: "center", render: function (b) {
+          return Calc.pago(b) ? "" : "<span class='link-mini'>baixar</span>";
+        } }
+    ];
+  }
+  function cambioCols() {
+    return [
+      { key: "dataFechamento", label: "Data", render: function (c) { return Fmt.date(c.dataFechamento); } },
+      { key: "boletoB", label: "Boleto B", align: "right", render: function (c) { return brl(c.boletoB); } },
+      { key: "pagos", label: "Pago", align: "center" },
+      { key: "cambioRealizado", label: "Valor BRL", align: "right", render: function (c) { return c.cambioRealizado ? brl(c.cambioRealizado) : "Pendente"; } },
+      { key: "taxaCambial", label: "Taxa câmbial", align: "right", render: function (c) { return c.taxaCambial != null ? Fmt.num(c.taxaCambial, 4) : "—"; } },
+      { key: "valorUSD", label: "Valor USD", align: "right", render: function (c) { return c.valorUSD != null ? "US$ " + Fmt.num(c.valorUSD, 2) : "—"; } },
+      { key: "contratoCambio", label: "Nº Contrato", render: function (c) { return c.contratoCambio || "—"; } },
+      { key: "diferenca", label: "Diferença", align: "right", render: function (c) { return c.diferenca != null ? brl(c.diferenca) : "—"; } }
+    ];
+  }
+
+  function rerender() { if (window.App && window.App.render) window.App.render(); }
+
+  window.Views = Views;
+})();
+
+</script>
+<script>
+/* app.js — inicialização e roteamento */
+(function () {
+  "use strict";
+  var UI = window.UI, el = window.UI.el;
+
+  var NAV = [
+    { id: "dashboard", label: "Painel", icon: "▣" },
+    { id: "processos", label: "Processos", icon: "▤" },
+    { id: "boletos", label: "Boletos", icon: "₵" },
+    { id: "notas", label: "Notas Fiscais", icon: "🧾" },
+    { id: "cambio", label: "Câmbio", icon: "⇄" },
+    { id: "geral", label: "Processos - Geral", icon: "▦" },
+    { id: "dre", label: "DRE", icon: "∑" },
+    { id: "fluxo", label: "Fluxo de Caixa", icon: "≈" },
+    { id: "clientes", label: "Clientes", icon: "☻" },
+    { id: "historico", label: "Histórico", icon: "🕓" },
+    { id: "backup", label: "Dados / Backup", icon: "⛁" }
+  ];
+
+  function parseHash() {
+    var h = location.hash.replace(/^#\/?/, "");
+    var qIdx = h.indexOf("?");
+    var query = {};
+    if (qIdx >= 0) {
+      h.substring(qIdx + 1).split("&").forEach(function (kv) {
+        var p = kv.split("="); query[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || "");
+      });
+      h = h.substring(0, qIdx);
+    }
+    var parts = h.split("/").filter(Boolean).map(decodeURIComponent);
+    return { route: parts[0] || "dashboard", param: parts[1], query: query };
+  }
+
+  var titles = {
+    dashboard: "Painel de Controle", processos: "Processos de Importação", boletos: "Contas a Receber — Boletos",
+    notas: "Notas Fiscais", cambio: "Controle de Câmbio", geral: "Processos - Geral", dre: "DRE", fluxo: "Fluxo de Caixa",
+    clientes: "Clientes", historico: "Histórico de Alterações", backup: "Dados e Backup"
+  };
+
+  var App = {
+    render: function () {
+      var r = parseHash();
+      // nav ativo
+      Array.prototype.forEach.call(document.querySelectorAll(".nav-item"), function (a) {
+        a.classList.toggle("active", a.dataset.route === r.route);
+      });
+      var title = titles[r.route] || "—";
+      if (r.route === "processos" && r.param) title = "Processo " + r.param;
+      document.getElementById("page-title").textContent = title;
+
+      var view;
+      try {
+        var V = window.Views;
+        if (r.route === "processos" && r.param) view = V.processoDetail(r.param);
+        else if (V[r.route]) view = V[r.route](r.query);
+        else view = el("p", null, "Página não encontrada.");
+      } catch (e) {
+        view = el("div", { class: "error-box" }, ["Erro ao renderizar: ", el("pre", null, String(e && e.stack || e))]);
+        console.error(e);
+      }
+      var main = document.getElementById("view");
+      UI.clear(main);
+      main.appendChild(view);
+      UI.colorNegatives(main);
+      main.scrollTop = 0;
+    },
+
+    init: function () {
+      // sidebar
+      var nav = document.getElementById("nav");
+      NAV.forEach(function (n) {
+        nav.appendChild(el("a", { class: "nav-item", href: "#/" + n.id, dataset: { route: n.id } }, [
+          el("span", { class: "nav-icon" }, n.icon), el("span", { class: "nav-text" }, n.label)
+        ]));
+      });
+
+      var btnSync = document.getElementById("btn-sync");
+      if (btnSync) btnSync.addEventListener("click", function () {
+        if (!window.Sync || !window.Sync.available) { UI.toast("Sincronização indisponível. Abra o sistema pelo 'Iniciar Sistema.bat'.", "warn"); return; }
+        UI.confirmar("Recarregar TODOS os dados a partir das planilhas da pasta? A planilha é a fonte oficial; um backup automático é guardado antes.", function () {
+          window.Sync.manual();
+        }, { okLabel: "Sincronizar agora" });
+      });
+
+      var cloud = !!(window.SB && window.SB.configured);
+      // botão de sair (nuvem)
+      var btnLogout = document.getElementById("btn-logout");
+      if (btnLogout) {
+        btnLogout.style.display = cloud ? "" : "none";
+        btnLogout.addEventListener("click", function () {
+          UI.confirmar("Deseja sair da sua conta?", function () { window.SB.signOut(); }, { okLabel: "Sair" });
+        });
+      }
+      // no modo nuvem, esconde o botão de sincronizar (planilha deixa de ser a fonte)
+      if (cloud && btnSync) btnSync.style.display = "none";
+
+      // menu lateral no celular (hambúrguer)
+      var btnMenu = document.getElementById("btn-menu");
+      var backdrop = document.getElementById("sidebar-backdrop");
+      function closeMenu() { document.body.classList.remove("menu-open"); }
+      if (btnMenu) btnMenu.addEventListener("click", function () { document.body.classList.toggle("menu-open"); });
+      if (backdrop) backdrop.addEventListener("click", closeMenu);
+      document.getElementById("nav").addEventListener("click", function (e) { if (e.target.closest(".nav-item")) closeMenu(); });
+
+      window.addEventListener("hashchange", App.render);
+      document.addEventListener("store:saved", function () {
+        var s = document.getElementById("save-status");
+        if (s) { s.textContent = "✔ salvo"; s.classList.add("show"); setTimeout(function () { s.classList.remove("show"); }, 1500); }
+      });
+      document.addEventListener("store:save-error", function () { UI.toast("Erro ao salvar na nuvem. Verifique sua conexão.", "danger"); });
+
+      if (cloud) {
+        window.SB.onAuthChange(function (session) {
+          if (session) { App.hideLogin(); App.boot(); }
+          else { App._booted = false; App.showLogin(); }
+        });
+        window.SB.getSession().then(function (session) {
+          if (session) { App.hideLogin(); App.boot(); }
+          else { App.showLogin(); }
+        });
+      } else {
+        App.boot();
+      }
+    },
+
+    boot: function () {
+      if (App._booted) return; App._booted = true;
+      var pre = (window.SB && window.SB.configured)
+        ? window.SB.userEmail().then(function (email) {
+            var nome = "";
+            try { nome = (localStorage.getItem("akos_user_name") || "").trim(); } catch (e) {}
+            var quem = nome || email || "usuário";
+            Store.setUser(quem); App._userEmail = quem;
+          }).catch(function () { })
+        : Promise.resolve();
+      pre.then(function () { return window.Store.init(); }).then(function () {
+        var emp = window.Store.state.empresa || {};
+        var sub = document.getElementById("brand-sub");
+        if (sub) sub.textContent = (emp.importadora || "MRD") + " × " + (emp.adquirente || "AKOS");
+        var who = document.getElementById("user-email");
+        if (who && App._userEmail) who.textContent = App._userEmail;
+        if (!location.hash) location.hash = "#/dashboard";
+        App.render();
+        if (Store.isCloud()) { Store.startBackupTimer(); Store.log("Entrou no sistema", null); }
+        else if (window.Sync) { window.Sync.init(); }
+      }).catch(function (e) {
+        var v = document.getElementById("view");
+        if (v) v.appendChild(el("div", { class: "error-box" }, "Falha ao carregar dados: " + (e && e.message ? e.message : e)));
+        console.error(e);
+      });
+    },
+
+    showLogin: function () {
+      var ov = document.getElementById("login-overlay");
+      if (ov) { ov.style.display = "flex"; return; }
+      ov = el("div", { id: "login-overlay", class: "login-overlay" });
+      var nome = el("input", { class: "inp", type: "text", placeholder: "seu nome", autocomplete: "name", value: (localStorage.getItem("akos_user_name") || "") });
+      var pw = el("input", { class: "inp", type: "password", placeholder: "senha de acesso", autocomplete: "current-password" });
+      var msg = el("div", { class: "login-msg" });
+      var btn = el("button", { class: "btn btn-primary btn-block" }, "Entrar");
+      function entrar() {
+        msg.textContent = ""; btn.disabled = true; btn.textContent = "Entrando…";
+        try { localStorage.setItem("akos_user_name", (nome.value || "").trim()); } catch (e) {}
+        window.SB.signInShared(pw.value || "").then(function (r) {
+          btn.disabled = false; btn.textContent = "Entrar";
+          if (r.error) { msg.textContent = "Senha incorreta."; }
+        }).catch(function () { btn.disabled = false; btn.textContent = "Entrar"; msg.textContent = "Falha ao entrar. Tente de novo."; });
+      }
+      btn.addEventListener("click", entrar);
+      pw.addEventListener("keydown", function (e) { if (e.key === "Enter") entrar(); });
+      ov.appendChild(el("div", { class: "login-card" }, [
+        el("div", { class: "login-brand" }, [
+          el("span", { class: "login-mark" }, "AKOS"), el("span", { class: "login-mark2" }, "Trading")
+        ]),
+        el("h2", null, "Controle Financeiro"),
+        el("p", { class: "login-sub" }, "Digite a senha de acesso para entrar."),
+        el("label", { class: "field" }, [el("span", { class: "field-label" }, "Seu nome (aparece no histórico)"), nome]),
+        el("label", { class: "field" }, [el("span", { class: "field-label" }, "Senha de acesso"), pw]),
+        msg, btn
+      ]));
+      document.body.appendChild(ov);
+      setTimeout(function () { pw.focus(); }, 50);
+    },
+    hideLogin: function () {
+      var ov = document.getElementById("login-overlay");
+      if (ov) ov.style.display = "none";
+    }
+  };
+
+  window.App = App;
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", App.init);
+  else App.init();
+})();
+
+</script>
+</body>
+</html>
