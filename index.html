@@ -788,8 +788,15 @@ window.SEED_DATA = { "version": 1, "empresa": { "adquirente": "AKOS", "importado
     return TIPO_NORM[k] || t;
   }
 
+  // linha da aba RESUMO para um processo (fonte oficial de faturamento e saldo de NF-e)
+  function resumoRow(s, pid) {
+    var arr = (s && s.resumo) || [];
+    for (var i = 0; i < arr.length; i++) { if (arr[i].processoId === pid) return arr[i]; }
+    return null;
+  }
+
   var Calc = {
-    n: n, sum: sum, normTipo: normTipo,
+    n: n, sum: sum, normTipo: normTipo, resumoRow: resumoRow,
 
     itensDoProc: function (s, pid) { return s.itens.filter(function (i) { return i.processoId === pid; }); },
     boletosDoProc: function (s, pid) { return s.boletos.filter(function (b) { return b.processoId === pid; }); },
@@ -815,8 +822,21 @@ window.SEED_DATA = { "version": 1, "empresa": { "adquirente": "AKOS", "importado
       return "aberto";
     },
 
-    faturamento: function (s, pid) { return sum(Calc.itensDoProc(s, pid), function (i) { return i.valorTotal; }); },
+    // faturamento vem da aba RESUMO (fonte oficial); se faltar, soma os itens
+    faturamento: function (s, pid) {
+      var r = resumoRow(s, pid);
+      if (r && r.faturamento != null) return n(r.faturamento);
+      return sum(Calc.itensDoProc(s, pid), function (i) { return i.valorTotal; });
+    },
     valorProduto: function (s, pid) { return sum(Calc.itensDoProc(s, pid), function (i) { return i.valorProduto; }); },
+    // saldo de NF-e (MRD) vem da aba RESUMO; se faltar, calcula por NF MRD − adiantamento − CIF
+    saldoNFeProc: function (s, pid) {
+      var r = resumoRow(s, pid);
+      if (r && r.saldoNFe != null) return n(r.saldoNFe);
+      var p = (s.processos || []).filter(function (x) { return x.id === pid; })[0] || {};
+      var c = p.custo || {};
+      return n(c.nfMRD) - n(c.adiantamento) - n(c.valorCIF);
+    },
 
     recebido: function (s, pid) {
       return sum(Calc.boletosDoProc(s, pid).filter(Calc.pago), function (b) { return Calc.valorRecebidoBoleto(b); });
@@ -837,15 +857,16 @@ window.SEED_DATA = { "version": 1, "empresa": { "adquirente": "AKOS", "importado
       var bol = Calc.boletosDoProc(s, pid);
       var porTipo = function (t) { return bol.filter(function (b) { return normTipo(b.tipo) === t; }); };
       var cust = p.custo || {};
+      var rr = resumoRow(s, pid);
       return {
         processo: p,
         faturamento: fat,
         valorProduto: Calc.valorProduto(s, pid),
-        adiantamento: n(p.valorAKOSxMRD) || n(cust.adiantamento),
+        adiantamento: (rr && rr.adiantamento != null) ? n(rr.adiantamento) : (n(p.valorAKOSxMRD) || n(cust.adiantamento)),
         recebido: rec,
         aReceber: aRec,
         cif: n(cust.valorCIF),
-        saldoNFe: n(cust.saldoNFe),
+        saldoNFe: Calc.saldoNFeProc(s, pid),
         saldoFavorMRD: n(cust.saldoFavorMRD),
         taxaAdm: n(p.txAdmMRD) || n(cust.taxaAdmMRD),
         nBoletos: bol.length,
@@ -879,6 +900,7 @@ window.SEED_DATA = { "version": 1, "empresa": { "adquirente": "AKOS", "importado
         nProcessos: s.processos.length,
         nClientes: (s.clientes || []).length,
         faturamento: totFat,
+        saldoNFe: sum(s.processos, function (p) { return Calc.saldoNFeProc(s, p.id); }),
         recebido: totRec,
         aReceber: totAReceber,
         adiantamento: totAdiant,
@@ -1590,11 +1612,8 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
     var lucroLiquido = drLeft("lucro liquido");
     var lucroContainer = drLeft("lucro por container");
     var lucroOperacao = (lucroLiquido != null) ? lucroLiquido : lucroAkos;
-    // Saldo de NF-e da MRD = (NF MRD − adiantamento − CIF) por processo, somado
-    var saldoNFeMRD = s().processos.reduce(function (a, p) {
-      var c = p.custo || {};
-      return a + (Calc.n(c.nfMRD) - Calc.n(c.adiantamento) - Calc.n(c.valorCIF));
-    }, 0);
+    // Saldo de NF-e da MRD — vem da aba RESUMO da planilha (somado dos processos)
+    var saldoNFeMRD = d.saldoNFe;
     var cam = s().cambio || [];
     var camRealizado = cam.reduce(function (a, c) { return a + Calc.n(c.cambioRealizado); }, 0);
     var camRealCount = cam.filter(function (c) { return Calc.n(c.cambioRealizado) > 0; }).length;
@@ -1610,7 +1629,7 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
     // KPIs — linha 2
     wrap.appendChild(el("div", { class: "kpi-grid" }, [
       UI.kpi("Adiantamentos (AKOS→MRD)", brl(d.adiantamento), {}),
-      UI.kpi("Saldo de Nf-e (MRD)", brl(saldoNFeMRD), { sub: "NF entrada MRD − Adiantamento − Valor CIF", onclick: function () { go("#/processos"); } }),
+      UI.kpi("Saldo de Nf-e (MRD)", brl(saldoNFeMRD), { sub: "conforme aba RESUMO da planilha", onclick: function () { go("#/processos"); } }),
       UI.kpi("Boletos vencidos", String(d.boletosVencidos), { kind: d.boletosVencidos ? "danger" : "muted", sub: brl(d.valorVencidos), onclick: function () { go("#/boletos?status=vencido"); } }),
       UI.kpi("Câmbio realizado", brl(camRealizado), { kind: camRealizado ? "ok" : "muted", sub: camRealCount + " de " + cam.length + " processos", onclick: function () { go("#/cambio"); } })
     ]));
@@ -1911,7 +1930,6 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
     ]);
     var body = el("div");
     wrap.appendChild(UI.section("Notas Fiscais", el("div", null, [filtro, body]), [
-      el("button", { class: "btn btn-primary", onclick: function () { importarNfPDF(); } }, "📄 Importar PDF da NF"),
       el("button", { class: "btn", onclick: function () { window.IO.exportExcel(s()); } }, "⬇ Exportar Excel")
     ]));
 
