@@ -2950,13 +2950,9 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
 
       var cloud = !!(window.SB && window.SB.configured);
       // botão de sair (nuvem)
+      // sem login: esconde o botão de sair
       var btnLogout = document.getElementById("btn-logout");
-      if (btnLogout) {
-        btnLogout.style.display = cloud ? "" : "none";
-        btnLogout.addEventListener("click", function () {
-          UI.confirmar("Deseja sair da sua conta?", function () { window.SB.signOut(); }, { okLabel: "Sair" });
-        });
-      }
+      if (btnLogout) btnLogout.style.display = "none";
       // no modo nuvem, esconde o botão de sincronizar (planilha deixa de ser a fonte)
       if (cloud && btnSync) btnSync.style.display = "none";
 
@@ -2975,18 +2971,8 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
       });
       document.addEventListener("store:save-error", function () { UI.toast("Erro ao salvar na nuvem. Verifique sua conexão.", "danger"); });
 
-      if (cloud) {
-        window.SB.onAuthChange(function (session) {
-          if (session) { App.hideLogin(); App.boot(); }
-          else { App._booted = false; App.showLogin(); }
-        });
-        window.SB.getSession().then(function (session) {
-          if (session) { App.hideLogin(); App.boot(); }
-          else { App.showLogin(); }
-        });
-      } else {
-        App.boot();
-      }
+      // acesso livre (sem login): entra direto no sistema
+      App.boot();
     },
 
     boot: function () {
@@ -3007,8 +2993,12 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
         if (who && App._userEmail) who.textContent = App._userEmail;
         if (!location.hash) location.hash = "#/dashboard";
         App.render();
-        if (Store.isCloud()) { Store.startBackupTimer(); Store.log("Entrou no sistema", null); }
-        else if (window.Sync) { window.Sync.init(); }
+        if (Store.isCloud()) {
+          // backup/histórico só quando houver sessão autenticada (a planilha/sync cuida disso)
+          window.SB.getSession().then(function (sess) {
+            if (sess) { Store.startBackupTimer(); Store.log("Entrou no sistema", null); }
+          });
+        } else if (window.Sync) { window.Sync.init(); }
       }).catch(function (e) {
         var v = document.getElementById("view");
         if (v) v.appendChild(el("div", { class: "error-box" }, "Falha ao carregar dados: " + (e && e.message ? e.message : e)));
