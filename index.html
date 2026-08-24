@@ -260,6 +260,8 @@ a.link-mini:hover { text-decoration: underline; }
 .hint { color: var(--muted); font-size: 12.5px; }
 .neg { color: var(--danger); font-weight: 600; } .warn-text { color: var(--warn); font-weight: 600; }
 .pend { color: var(--warn); font-weight: 600; }
+.alert-vencidos { background: #fde6e6; color: var(--danger); border: 1px solid #f5b5b5; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-weight: 600; }
+.vinc-tag { display: inline-block; background: #eef2ff; color: #3b53c4; border-radius: 6px; padding: 1px 6px; font-size: 11px; font-weight: 600; margin-left: 4px; white-space: nowrap; }
 .muted { color: var(--muted); } .ok { color: var(--ok); } .info { color: var(--info); }
 .link-mini { color: var(--brand); font-weight: 600; font-size: 12px; }
 .error-box { background: #fde6e6; border: 1px solid var(--danger); color: var(--danger); padding: 14px; border-radius: 8px; }
@@ -1798,47 +1800,59 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
   /* ----------------------------- BOLETOS ----------------------------- */
   Views.boletos = function (query) {
     var wrap = el("div");
-    var st = { status: query.status || "todos", tipo: query.tipo || "todos", proc: query.proc || "", busca: "" };
+    var st = { proc: query.proc || "todos", tipo: "todos", de: "", ate: "", busca: "" };
 
-    // seletor de processo (principal) — só mostra os boletos depois de escolher um processo
     var procIds = s().processos.map(function (p) { return p.id; });
-    var procSel = el("select", { class: "inp", onchange: function (e) { st.proc = e.target.value; render(); } }, [
-      el("option", { value: "", selected: st.proc === "" ? "selected" : null }, "— escolha um processo —"),
-      el("option", { value: "todos", selected: st.proc === "todos" ? "selected" : null }, "Todos os processos")
-    ].concat(procIds.map(function (id) { return el("option", { value: id, selected: id === st.proc ? "selected" : null }, id); })));
+    var procSel = el("select", { class: "inp", onchange: function (e) { st.proc = e.target.value; render(); } },
+      [el("option", { value: "todos", selected: st.proc === "todos" ? "selected" : null }, "Todos os processos")]
+      .concat(procIds.map(function (id) { return el("option", { value: id, selected: id === st.proc ? "selected" : null }, id); })));
     var selProc = el("label", { class: "field" }, [el("span", { class: "field-label" }, "Processo"), procSel]);
 
-    var selStatus = selectFilter("Status", ["todos", "aberto", "vencido", "vence-breve", "pago"], st.status, function (v) { st.status = v; render(); });
-    var tipos = ["todos"].concat(["Saldo NFe", "Câmbio", "Registro"]);
-    var selTipo = selectFilter("Tipo", tipos, st.tipo, function (v) { st.tipo = v; render(); });
-    var busca = el("input", { class: "inp", placeholder: "Buscar cliente / NF / observação...", oninput: function (e) { st.busca = e.target.value.toLowerCase(); render(); } });
+    var selTipo = selectFilter("Tipo", ["todos", "Saldo NFe", "Câmbio", "Registro"], st.tipo, function (v) { st.tipo = v; render(); });
 
-    var filtros = el("div", { class: "filters" });
-    filtros.appendChild(selProc); filtros.appendChild(selStatus); filtros.appendChild(selTipo);
-    filtros.appendChild(el("label", { class: "field" }, [el("span", { class: "field-label" }, "Busca"), busca]));
+    var deInp = el("input", { class: "inp", type: "date", onchange: function (e) { st.de = e.target.value; render(); } });
+    var ateInp = el("input", { class: "inp", type: "date", onchange: function (e) { st.ate = e.target.value; render(); } });
+    var busca = el("input", { class: "inp", placeholder: "Buscar cliente / NF...", oninput: function (e) { st.busca = e.target.value.toLowerCase(); render(); } });
+
+    var filtros = el("div", { class: "filters" }, [
+      selProc, selTipo,
+      el("label", { class: "field" }, [el("span", { class: "field-label" }, "Pagamento de"), deInp]),
+      el("label", { class: "field" }, [el("span", { class: "field-label" }, "até"), ateInp]),
+      el("label", { class: "field" }, [el("span", { class: "field-label" }, "Busca"), busca])
+    ]);
 
     var body = el("div");
-    var card = UI.section("Contas a receber — Boletos", el("div", null, [filtros, body]), [
+    wrap.appendChild(UI.section("Contas a receber — Boletos", el("div", null, [filtros, body]), [
+      el("button", { class: "btn", onclick: function () { st.de = ""; st.ate = ""; deInp.value = ""; ateInp.value = ""; render(); } }, "Limpar datas"),
       el("button", { class: "btn btn-primary", onclick: function () { novoBoleto(st.proc && st.proc !== "todos" ? st.proc : null); } }, "+ Novo boleto")
-    ]);
-    wrap.appendChild(card);
+    ]));
 
     function render() {
       UI.clear(body);
-      if (st.proc === "") {
-        body.appendChild(el("div", { class: "empty" }, "Escolha um processo acima para ver os boletos que o compõem — ou selecione \"Todos os processos\"."));
-        return;
-      }
+      var porData = !!(st.de || st.ate);
       var list = s().boletos.filter(function (b) {
-        if (st.status !== "todos" && Calc.statusBoleto(b) !== st.status) return false;
+        // processo: casa com o dono OU com o processo que ele ajuda a registrar (vínculo)
+        if (st.proc !== "todos" && b.processoId !== st.proc && b.vinculadoProcesso !== st.proc) return false;
         if (st.tipo !== "todos" && Calc.normTipo(b.tipo) !== st.tipo) return false;
-        if (st.proc !== "todos" && b.processoId !== st.proc) return false;
+        if (porData) {
+          var d = b.dataRecebimento || "";
+          if (!d) return false;                       // sem data de pagamento fica fora do filtro por data
+          if (st.de && d < st.de) return false;
+          if (st.ate && d > st.ate) return false;
+        }
         if (st.busca) {
-          var hay = ((b.cliente || "") + " " + (b.nfParcela || "") + " " + (b.descricao || "") + " " + (b.observacao || "")).toLowerCase();
+          var hay = ((b.cliente || "") + " " + (b.nfParcela || "") + " " + (b.descricao || "") + " " + (b.observacao || "") + " " + (b.vinculadoProcesso || "")).toLowerCase();
           if (hay.indexOf(st.busca) < 0) return false;
         }
         return true;
       }).sort(byVenc);
+
+      // alerta de vencidos
+      var vencidos = list.filter(function (b) { return Calc.statusBoleto(b) === "vencido"; });
+      if (vencidos.length) {
+        var vTot = vencidos.reduce(function (a, b) { return a + Calc.n(b.valor); }, 0);
+        body.appendChild(el("div", { class: "alert-vencidos" }, "⚠ " + vencidos.length + " boleto(s) vencido(s) — " + brl(vTot) + " em aberto"));
+      }
 
       var tot = list.reduce(function (a, b) { return a + Calc.n(b.valor); }, 0);
       var totRec = list.filter(Calc.pago).reduce(function (a, b) { return a + Calc.valorRecebidoBoleto(b); }, 0);
@@ -1914,88 +1928,50 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
     var wrap = el("div");
     var emit = s().nfEmitidas || [];
     var entr = s().nfEntrada || [];
-    if (!emit.length && !entr.length) {
-      wrap.appendChild(UI.section("Notas Fiscais", el("div", { class: "empty" },
-        "Nenhuma nota fiscal carregada. Use a planilha 'Notas Fiscais' e sincronize em Dados / Backup.")));
-      return wrap;
-    }
-    var st = { tipo: "todos", proc: (query && query.proc) || "todos", busca: "" };
-    var procs = ["todos"].concat(s().processos.map(function (p) { return p.id; }));
+    var st = { busca: "" };
 
-    var busca = el("input", { class: "inp", placeholder: "Buscar nº da nota / processo…", oninput: function (e) { st.busca = e.target.value.toLowerCase().trim(); render(); } });
+    var busca = el("input", { class: "inp", placeholder: "Buscar nº da nota fiscal…", oninput: function (e) { st.busca = e.target.value.toLowerCase().trim(); render(); } });
     var filtro = el("div", { class: "filters" }, [
-      selectFilter("Tipo de nota", ["todos", "Entrada (MRD)", "Saída (AKOS)"], st.tipo, function (v) { st.tipo = v; render(); }),
-      selectFilter("Processo", procs, st.proc, function (v) { st.proc = v; render(); }),
-      el("label", { class: "field" }, [el("span", { class: "field-label" }, "Busca"), busca])
+      el("label", { class: "field" }, [el("span", { class: "field-label" }, "Buscar nota fiscal"), busca])
     ]);
     var body = el("div");
-    wrap.appendChild(UI.section("Notas Fiscais", el("div", null, [filtro, body]), [
-      el("button", { class: "btn", onclick: function () { window.IO.exportExcel(s()); } }, "⬇ Exportar Excel")
-    ]));
+    wrap.appendChild(UI.section("Notas Fiscais", el("div", null, [filtro, body])));
 
     function match(n) {
-      if (st.proc !== "todos" && n.processoId !== st.proc) return false;
-      if (st.busca) {
-        var hay = ((n.numero || "") + " " + (n.processoId || "") + " " + (n.destinatario || n.cliente || "")).toLowerCase();
-        if (hay.indexOf(st.busca) < 0) return false;
-      }
-      return true;
+      if (!st.busca) return true;
+      return (("" + (n.numero || "")).toLowerCase().indexOf(st.busca) >= 0);
     }
     function sumf(arr, k) { return arr.reduce(function (a, x) { return a + Calc.n(x[k]); }, 0); }
 
     function render() {
       UI.clear(body);
-      var showSaida = (st.tipo === "todos" || st.tipo === "Saída (AKOS)");
-      var showEntrada = (st.tipo === "todos" || st.tipo === "Entrada (MRD)");
       var e = emit.filter(match), x = entr.filter(match);
 
-      if (showSaida) {
-        var colsE = [
-          { key: "emissao", label: "Emissão", render: function (n) { return Fmt.date(n.emissao); } },
-          { key: "numero", label: "Nº NF" },
-          { key: "processoId", label: "Proc." },
-          { key: "destinatario", label: "Destinatário" },
-          { key: "valorProduto", label: "Produtos", align: "right", render: function (n) { return brl(n.valorProduto); } },
-          { key: "valorNF", label: "Valor NF-e", align: "right", render: function (n) { return brl(n.valorNF); } },
-          { key: "ipi", label: "IPI", align: "right", render: function (n) { return brl(n.ipi); } },
-          { key: "icms", label: "ICMS", align: "right", render: function (n) { return brl(n.icms); } },
-          { key: "pis", label: "PIS", align: "right", render: function (n) { return brl(n.pis); } },
-          { key: "cofins", label: "COFINS", align: "right", render: function (n) { return brl(n.cofins); } },
-          { key: "ncm", label: "NCM", render: function (n) { return n.ncm ? escTxt(n.ncm) : "—"; } }
-        ];
-        var footE = el("tr", { class: "foot" }, [
-          el("td", { colspan: 4 }, e.length + " nota(s)"),
-          el("td", { class: "t-right" }, brl(sumf(e, "valorProduto"))), el("td", { class: "t-right" }, brl(sumf(e, "valorNF"))),
-          el("td", { class: "t-right" }, brl(sumf(e, "ipi"))), el("td", { class: "t-right" }, brl(sumf(e, "icms"))),
-          el("td", { class: "t-right" }, brl(sumf(e, "pis"))), el("td", { class: "t-right" }, brl(sumf(e, "cofins"))),
-          el("td", {}, "")
-        ]);
-        body.appendChild(subHead("NF de Saída (emitidas pela AKOS)", el("button", { class: "btn btn-sm btn-primary", onclick: function () { novoNfEmitida(); } }, "+ Adicionar NF de saída")));
-        body.appendChild(UI.table(colsE, e, { dense: true, footer: footE, emptyMsg: "Nenhuma nota de saída para o filtro.", onRowClick: function (n) { editarNfEmitida(n); } }));
-      }
+      var colsE = [
+        { key: "numero", label: "Nº Nota Fiscal" },
+        { key: "valorProduto", label: "Valor do produto", align: "right", render: function (n) { return brl(n.valorProduto); } },
+        { key: "valorNF", label: "Valor final", align: "right", render: function (n) { return brl(n.valorNF); } }
+      ];
+      var footE = el("tr", { class: "foot" }, [
+        el("td", null, e.length + " nota(s)"),
+        el("td", { class: "t-right" }, brl(sumf(e, "valorProduto"))),
+        el("td", { class: "t-right" }, brl(sumf(e, "valorNF")))
+      ]);
+      body.appendChild(subHead("Notas de Saída (emitidas pela AKOS)", el("button", { class: "btn btn-sm btn-primary", onclick: function () { novoNfEmitida(); } }, "+ Adicionar")));
+      body.appendChild(UI.table(colsE, e, { dense: true, footer: footE, emptyMsg: "Nenhuma nota de saída.", onRowClick: function (n) { editarNfEmitida(n); } }));
 
-      if (showEntrada) {
-        var colsX = [
-          { key: "emissao", label: "Emissão", render: function (n) { return Fmt.date(n.emissao); } },
-          { key: "numero", label: "Nº NF" },
-          { key: "processoId", label: "Proc." },
-          { key: "cliente", label: "Cliente" },
-          { key: "valorProduto", label: "Produtos", align: "right", render: function (n) { return brl(n.valorProduto); } },
-          { key: "valorTotal", label: "Valor Total", align: "right", render: function (n) { return brl(n.valorTotal); } },
-          { key: "ipi", label: "IPI", align: "right", render: function (n) { return brl(n.ipi); } },
-          { key: "icms", label: "ICMS", align: "right", render: function (n) { return brl(n.icms); } },
-          { key: "pis", label: "PIS", align: "right", render: function (n) { return brl(n.pis); } },
-          { key: "ncm", label: "NCM", render: function (n) { return n.ncm ? escTxt(n.ncm) : "—"; } }
-        ];
-        var footX = el("tr", { class: "foot" }, [
-          el("td", { colspan: 4 }, x.length + " nota(s)"),
-          el("td", { class: "t-right" }, brl(sumf(x, "valorProduto"))), el("td", { class: "t-right" }, brl(sumf(x, "valorTotal"))),
-          el("td", { class: "t-right" }, brl(sumf(x, "ipi"))), el("td", { class: "t-right" }, brl(sumf(x, "icms"))),
-          el("td", { class: "t-right" }, brl(sumf(x, "pis"))), el("td", {}, "")
-        ]);
-        body.appendChild(subHead("NF de Entrada (emitidas pela MRD)", el("button", { class: "btn btn-sm btn-primary", onclick: function () { novoNfEntrada(); } }, "+ Adicionar NF de entrada")));
-        body.appendChild(UI.table(colsX, x, { dense: true, footer: footX, emptyMsg: "Nenhuma nota de entrada para o filtro.", onRowClick: function (n) { editarNfEntrada(n); } }));
-      }
+      var colsX = [
+        { key: "numero", label: "Nº Nota Fiscal" },
+        { key: "valorProduto", label: "Valor do produto", align: "right", render: function (n) { return brl(n.valorProduto); } },
+        { key: "valorTotal", label: "Valor final", align: "right", render: function (n) { return brl(n.valorTotal); } }
+      ];
+      var footX = el("tr", { class: "foot" }, [
+        el("td", null, x.length + " nota(s)"),
+        el("td", { class: "t-right" }, brl(sumf(x, "valorProduto"))),
+        el("td", { class: "t-right" }, brl(sumf(x, "valorTotal")))
+      ]);
+      body.appendChild(subHead("Notas de Entrada (emitidas pela MRD)", el("button", { class: "btn btn-sm btn-primary", onclick: function () { novoNfEntrada(); } }, "+ Adicionar")));
+      body.appendChild(UI.table(colsX, x, { dense: true, footer: footX, emptyMsg: "Nenhuma nota de entrada.", onRowClick: function (n) { editarNfEntrada(n); } }));
     }
     render();
     return wrap;
@@ -2849,7 +2825,11 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
   function boletoColsFull() {
     return [
       { key: "vencimento", label: "Vencimento", render: function (b) { return Fmt.date(b.vencimento); } },
-      { key: "processoId", label: "Proc." },
+      { key: "processoId", label: "Proc.", render: function (b) {
+          var t = escTxt(b.processoId || "—");
+          if (b.vinculadoProcesso) t += " <span class='vinc-tag' title='Boleto de registro usado no processo " + escTxt(b.vinculadoProcesso) + "'>↪ registro " + escTxt(b.vinculadoProcesso) + "</span>";
+          return t;
+        } },
       { key: "cliente", label: "Cliente" },
       { key: "nfParcela", label: "NF/Parc." },
       { key: "tipo", label: "Tipo", render: function (b) { return Calc.normTipo(b.tipo); } },
@@ -2889,7 +2869,6 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
 
   var NAV = [
     { id: "dashboard", label: "Painel", icon: "▣" },
-    { id: "processos", label: "Processos", icon: "▤" },
     { id: "boletos", label: "Boletos", icon: "₵" },
     { id: "notas", label: "Notas Fiscais", icon: "🧾" },
     { id: "cambio", label: "Câmbio", icon: "⇄" },
