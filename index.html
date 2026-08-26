@@ -840,6 +840,13 @@ window.SEED_DATA = { "version": 1, "empresa": { "adquirente": "AKOS", "importado
       return n(c.nfMRD) - n(c.adiantamento) - n(c.valorCIF);
     },
 
+    // NF de saída (emitidas AKOS) de um processo
+    nfSaidaDoProc: function (s, pid) { return (s.nfEmitidas || []).filter(function (x) { return x.processoId === pid; }); },
+    // "PAGO MRD" preenchido = saldo de NF-e já pago à MRD
+    pagoMRD: function (it) { return !!(("" + (it.pagoMRDStatus || "")).trim()); },
+    saldoNFePagoProc: function (s, pid) { return sum(Calc.itensDoProc(s, pid).filter(function (i) { return Calc.pagoMRD(i); }), function (i) { return i.saldoNFeE; }); },
+    saldoNFeAPagarProc: function (s, pid) { return sum(Calc.itensDoProc(s, pid).filter(function (i) { return !Calc.pagoMRD(i); }), function (i) { return i.saldoNFeE; }); },
+
     recebido: function (s, pid) {
       return sum(Calc.boletosDoProc(s, pid).filter(Calc.pago), function (b) { return Calc.valorRecebidoBoleto(b); });
     },
@@ -907,6 +914,13 @@ window.SEED_DATA = { "version": 1, "empresa": { "adquirente": "AKOS", "importado
         aReceber: totAReceber,
         adiantamento: totAdiant,
         pctRecebido: totBoletos ? totRec / totBoletos : 0,
+        // KPIs do painel "clean"
+        boletoASaldoAReceber: sum(s.boletos.filter(function (b) { return normTipo(b.tipo) === "Saldo NFe" && !Calc.pago(b); }), function (b) { return b.valor; }),
+        processosAFaturar: s.processos.filter(function (p) { return !Calc.faturamento(s, p.id); }).length,
+        comissaoMRD: sum(s.itens, function (i) { return i.comissaoDeb; }),
+        taxaAdmPendente: sum(s.processos.filter(function (p) { return ("" + (p.txAdmPago || "")).toUpperCase() !== "PAGO"; }), function (p) { return p.txAdmMRD; }),
+        saldoNFeAPagar: sum(s.itens.filter(function (i) { return !Calc.pagoMRD(i); }), function (i) { return i.saldoNFeE; }),
+        comissaoSanvix: sum((s.resumo || []), function (r) { return r.comissaoSanvix; }),
         nBoletos: s.boletos.length,
         boletosAbertos: abertos.length,
         valorAbertos: sum(abertos, function (b) { return b.valor; }),
@@ -1604,60 +1618,35 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
     var d = Calc.dashboard(s());
     var wrap = el("div");
 
-    // valores da DRE (conferência) para os indicadores
+    // Lucro da operação — vem da aba DRE da planilha
     var dre = s().dre;
-    function drRightRow(lbl) { return (dre && dre.right ? dre.right : []).filter(function (x) { return x.label.toLowerCase().trim() === lbl; })[0]; }
-    function drRight(lbl) { var r = drRightRow(lbl); return r ? r.value : null; }
-    function drNorm(s) { return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
-    function drLeft(sub) { if (!dre || !dre.left) return null; var r = dre.left.filter(function (x) { return drNorm(x.label).indexOf(sub) >= 0; })[0]; return r ? r.value : null; }
-    var lucroAkos = drRight("lucro");
-    var lucroLiquido = drLeft("lucro liquido");
-    var lucroContainer = drLeft("lucro por container");
-    var lucroOperacao = (lucroLiquido != null) ? lucroLiquido : lucroAkos;
-    // Saldo de NF-e da MRD — vem da aba RESUMO da planilha (somado dos processos)
-    var saldoNFeMRD = d.saldoNFe;
-    var cam = s().cambio || [];
-    var camRealizado = cam.reduce(function (a, c) { return a + Calc.n(c.cambioRealizado); }, 0);
-    var camRealCount = cam.filter(function (c) { return Calc.n(c.cambioRealizado) > 0; }).length;
+    function drNorm(x) { return String(x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+    function drRight(lbl) { var a = (dre && dre.right) || []; var r = a.filter(function (x) { return x.label.toLowerCase().trim() === lbl; })[0]; return r ? r.value : null; }
+    function drLeft(sub) { var a = (dre && dre.left) || []; var r = a.filter(function (x) { return drNorm(x.label).indexOf(sub) >= 0; })[0]; return r ? r.value : null; }
+    var lucroOperacao = (drLeft("lucro liquido") != null) ? drLeft("lucro liquido") : drRight("lucro");
 
-    // KPIs — linha 1
-    wrap.appendChild(el("div", { class: "kpi-grid" }, [
+    // ---- Resultado ----
+    wrap.appendChild(UI.section("Resultado", el("div", { class: "kpi-grid" }, [
       UI.kpi("Faturamento total", brl(d.faturamento), { kind: "primary", sub: d.nProcessos + " processos" }),
-      UI.kpi("Recebido", brl(d.recebido), { kind: "ok", sub: Fmt.pct(d.pctRecebido) + " dos boletos recebido" }),
+      UI.kpi("Recebido", brl(d.recebido), { kind: "ok", sub: Fmt.pct(d.pctRecebido) + " recebido" }),
       UI.kpi("A receber", brl(d.aReceber), { kind: "info", sub: d.boletosAbertos + " boletos em aberto", onclick: function () { go("#/boletos"); } }),
-      UI.kpi("Lucro da Operação", brl(lucroOperacao), { kind: "primary", sub: lucroContainer != null ? brl(lucroContainer) + " por container" : null, onclick: function () { go("#/dre"); } })
-    ]));
+      UI.kpi("Lucro da operação", brl(lucroOperacao), { kind: "primary" })
+    ])));
 
-    // KPIs — linha 2
-    wrap.appendChild(el("div", { class: "kpi-grid" }, [
-      UI.kpi("Adiantamentos (AKOS→MRD)", brl(d.adiantamento), {}),
-      UI.kpi("Saldo de Nf-e (MRD)", brl(saldoNFeMRD), { sub: "conforme aba RESUMO da planilha", onclick: function () { go("#/processos"); } }),
-      UI.kpi("Boletos vencidos", String(d.boletosVencidos), { kind: d.boletosVencidos ? "danger" : "muted", sub: brl(d.valorVencidos), onclick: function () { go("#/boletos?status=vencido"); } }),
-      UI.kpi("Câmbio realizado", brl(camRealizado), { kind: camRealizado ? "ok" : "muted", sub: camRealCount + " de " + cam.length + " processos", onclick: function () { go("#/cambio"); } })
-    ]));
+    // ---- A receber ----
+    wrap.appendChild(UI.section("A receber", el("div", { class: "kpi-grid" }, [
+      UI.kpi("Boletos A (Saldo de NF-e) a receber", brl(d.boletoASaldoAReceber), { kind: "info", onclick: function () { go("#/boletos"); } }),
+      UI.kpi("Processos a faturar", String(d.processosAFaturar), { kind: d.processosAFaturar ? "warn" : "muted", sub: "sem faturamento ainda" })
+    ])));
 
-    // recebimento por processo (barras)
-    var rows = s().processos.map(function (p) { return Calc.resumoProc(s(), p); });
-    var maxFat = Math.max.apply(null, rows.map(function (r) { return r.faturamento; }).concat([1]));
-    var barList = el("div", { class: "bars" }, rows.map(function (r) {
-      var pct = r.faturamento ? Math.round(r.recebido / r.faturamento * 100) : 0;
-      return el("div", { class: "bar-row clickable", onclick: function () { go("#/processos/" + encodeURIComponent(r.processo.id)); } }, [
-        el("div", { class: "bar-label" }, r.processo.id),
-        el("div", { class: "bar-track", title: pct + "% recebido" }, [
-          el("div", { class: "bar-fill", style: { width: Math.round(r.faturamento / maxFat * 100) + "%" } }),
-          el("div", { class: "bar-fill bar-fill-rec", style: { width: Math.round(r.recebido / maxFat * 100) + "%" } })
-        ]),
-        el("div", { class: "bar-val" }, brl(r.faturamento)),
-        el("div", { class: "bar-pct " + (pct >= 100 ? "ok" : pct > 0 ? "info" : "muted") }, pct + "%")
-      ]);
-    }));
-    wrap.appendChild(UI.section("Faturamento × Recebimento por processo", barList));
+    // ---- A pagar ----
+    wrap.appendChild(UI.section("A pagar", el("div", { class: "kpi-grid" }, [
+      UI.kpi("Comissão MRD", brl(d.comissaoMRD), {}),
+      UI.kpi("Taxa administrativa pendente", brl(d.taxaAdmPendente), { kind: d.taxaAdmPendente ? "warn" : "muted" }),
+      UI.kpi("Saldo de NF-e a pagar", brl(d.saldoNFeAPagar), { kind: d.saldoNFeAPagar ? "warn" : "muted", sub: "PAGO MRD em branco" }),
+      UI.kpi("Comissão Sanvix a pagar", brl(d.comissaoSanvix), { kind: d.comissaoSanvix ? "warn" : "muted" })
+    ])));
 
-    // ---- boletos vencidos (se houver) ----
-    var venc = s().boletos.filter(function (b) { return Calc.statusBoleto(b) === "vencido"; }).sort(byVenc);
-    if (venc.length) {
-      wrap.appendChild(UI.section("⚠ Boletos vencidos (" + venc.length + ")", UI.table(boletoCols(true), venc, { dense: true, onRowClick: function (b) { abrirBoleto(b); } })));
-    }
     return wrap;
   };
 
@@ -1673,8 +1662,13 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
 
     var cols = [
       { key: "id", label: "Processo", render: function (r) { return "<strong>" + esc(r.processo.id) + "</strong>"; } },
-      { key: "bl", label: "BL/AWB", render: function (r) { return esc(r.processo.blAwb || "—"); } },
-      { key: "abrir", label: "", align: "right", render: function () { return "<span class='link-mini'>abrir →</span>"; } }
+      { key: "fat", label: "Faturamento", align: "right", render: function (r) { return brl(r.faturamento); } },
+      { key: "rec", label: "Recebido", align: "right", render: function (r) { return brl(r.recebido); } },
+      { key: "arec", label: "A receber", align: "right", render: function (r) { return "<span class='pend'>" + brl(r.aReceber) + "</span>"; } },
+      { key: "bol", label: "Boletos", align: "center", render: function (r) { return r.boletosPagos + "/" + r.nBoletos; } },
+      { key: "nf", label: "NF saída", align: "center", render: function (r) { return String(r.nfSaida); } },
+      { key: "sp", label: "Saldo NF-e pago", align: "right", render: function (r) { return brl(r.saldoPago); } },
+      { key: "sa", label: "Saldo NF-e a pagar", align: "right", render: function (r) { return r.saldoAPagar ? "<span class='pend'>" + brl(r.saldoAPagar) + "</span>" : "—"; } }
     ];
 
     var head = el("h3", { class: "sub-title" }, "");
@@ -1682,7 +1676,17 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
 
     function render() {
       UI.clear(body);
-      var rows = s().processos.map(function (p) { return { processo: p }; });
+      var rows = s().processos.map(function (p) {
+        var r = Calc.resumoProc(s(), p);
+        return {
+          processo: p,
+          faturamento: r.faturamento, recebido: r.recebido, aReceber: r.aReceber,
+          nBoletos: r.nBoletos, boletosPagos: r.boletosPagos,
+          nfSaida: Calc.nfSaidaDoProc(s(), p.id).length,
+          saldoPago: Calc.saldoNFePagoProc(s(), p.id),
+          saldoAPagar: Calc.saldoNFeAPagarProc(s(), p.id)
+        };
+      });
       if (st.busca) {
         rows = rows.filter(function (r) {
           var clientes = Calc.itensDoProc(s(), r.processo.id).map(function (i) { return i.cliente; }).filter(Boolean).join(" ");
@@ -1691,7 +1695,18 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
         });
       }
       head.textContent = rows.length + " processo(s)";
+      function tot(f) { return rows.reduce(function (a, r) { return a + Calc.n(r[f]); }, 0); }
+      var foot = el("tr", { class: "foot" }, [
+        el("td", null, "TOTAL (" + rows.length + ")"),
+        el("td", { class: "t-right" }, brl(tot("faturamento"))),
+        el("td", { class: "t-right" }, brl(tot("recebido"))),
+        el("td", { class: "t-right" }, brl(tot("aReceber"))),
+        el("td", {}, ""), el("td", {}, ""),
+        el("td", { class: "t-right" }, brl(tot("saldoPago"))),
+        el("td", { class: "t-right" }, brl(tot("saldoAPagar")))
+      ]);
       body.appendChild(UI.table(cols, rows, {
+        dense: true, footer: foot,
         onRowClick: function (r) { go("#/processos/" + encodeURIComponent(r.processo.id)); },
         emptyMsg: "Nenhum processo encontrado."
       }));
@@ -2888,12 +2903,7 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
     { id: "boletos", label: "Boletos", icon: "₵" },
     { id: "notas", label: "Notas Fiscais", icon: "🧾" },
     { id: "cambio", label: "Câmbio", icon: "⇄" },
-    { id: "geral", label: "Processos - Geral", icon: "▦" },
-    { id: "dre", label: "DRE", icon: "∑" },
-    { id: "fluxo", label: "Fluxo de Caixa", icon: "≈" },
-    { id: "clientes", label: "Clientes", icon: "☻" },
-    { id: "historico", label: "Histórico", icon: "🕓" },
-    { id: "backup", label: "Dados / Backup", icon: "⛁" }
+    { id: "processos", label: "Processos", icon: "▤" }
   ];
 
   function parseHash() {
