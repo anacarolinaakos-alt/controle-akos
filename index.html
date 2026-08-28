@@ -947,10 +947,18 @@ window.SEED_DATA = { "version": 1, "empresa": { "adquirente": "AKOS", "importado
         taxaAdmPendente: sum(s.processos.filter(function (p) {
           return p.txAdmVerde && !(("" + (p.txAdmPago || "")).trim());
         }), function (p) { return p.txAdmMRD; }),
+        taxaAdmPendenteLista: s.processos.filter(function (p) {
+          return p.txAdmVerde && !(("" + (p.txAdmPago || "")).trim());
+        }).map(function (p) { return p.id; }),
         // saldo de NF-e a pagar = processo verde + PAGO MRD em branco + valor positivo
         saldoNFeAPagar: sum(s.itens.filter(function (i) {
           return greenIds[i.processoId] && !Calc.pagoMRD(i) && n(i.saldoNFeE) > 0;
         }), function (i) { return i.saldoNFeE; }),
+        saldoNFeAPagarLista: (function () {
+          var set = {};
+          s.itens.forEach(function (i) { if (greenIds[i.processoId] && !Calc.pagoMRD(i) && n(i.saldoNFeE) > 0) set[i.processoId] = true; });
+          return Object.keys(set).sort();
+        })(),
         // comissão Sanvix = R$ 1.000 por processo faturado
         comissaoSanvix: faturados.length * 1000,
         nBoletos: s.boletos.length,
@@ -1688,8 +1696,8 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
     // ---- A pagar (à MRD / Sanvix) ----
     wrap.appendChild(UI.section("A pagar", el("div", { class: "kpi-grid" }, [
       UI.kpi("Comissão MRD", brl(d.comissaoMRD), {}),
-      UI.kpi("Taxa administrativa pendente", brl(d.taxaAdmPendente), { kind: d.taxaAdmPendente ? "warn" : "muted" }),
-      UI.kpi("Saldo de NF-e a pagar", brl(d.saldoNFeAPagar), { kind: d.saldoNFeAPagar ? "warn" : "muted" }),
+      UI.kpi("Taxa administrativa pendente", brl(d.taxaAdmPendente), { kind: d.taxaAdmPendente ? "warn" : "muted", sub: (d.taxaAdmPendenteLista && d.taxaAdmPendenteLista.length) ? "Processos: " + d.taxaAdmPendenteLista.join(", ") : "nenhum pendente" }),
+      UI.kpi("Saldo de NF-e a pagar", brl(d.saldoNFeAPagar), { kind: d.saldoNFeAPagar ? "warn" : "muted", sub: (d.saldoNFeAPagarLista && d.saldoNFeAPagarLista.length) ? "Processos: " + d.saldoNFeAPagarLista.join(", ") : "nenhum pendente" }),
       UI.kpi("Comissão Sanvix a pagar", brl(d.comissaoSanvix), { kind: d.comissaoSanvix ? "warn" : "muted" })
     ])));
 
