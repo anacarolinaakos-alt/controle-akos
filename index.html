@@ -1952,16 +1952,7 @@ window.Sync = { available: false, init: function () {}, manual: function () { tr
         el("div", { class: "dash-strip-item" }, [el("span", { class: "ds-k" }, "Fechados"), el("span", { class: "ds-v" }, fechados.length + " / " + list.length + " (" + Fmt.pct(pctFech) + ")")])
       ]));
 
-      // A fechar (pendentes) — simples
-      var colsP = [
-        { key: "processoId", label: "Processo", render: function (c) { return "<strong>" + esc(c.processoId) + "</strong>"; } },
-        { key: "boletoB", label: "Boleto B (a fechar)", align: "right", render: function (c) { return brl(c.boletoB); } }
-      ];
-      var footP = el("tr", { class: "foot" }, [el("td", null, aFechar.length + " processo(s)"), el("td", { class: "t-right" }, brl(brlAFechar))]);
-      body.appendChild(subHead("Câmbios a fechar (" + aFechar.length + ")"));
-      body.appendChild(UI.table(colsP, aFechar, { dense: true, footer: footP, emptyMsg: "Nenhum câmbio a fechar.", onRowClick: function (c) { editarCambio(c); } }));
-
-      // Fechados — detalhe completo
+      // Fechados — detalhe completo (a relação mostra apenas os câmbios fechados)
       var colsF = [
         { key: "dataFechamento", label: "Data", render: function (c) { return Fmt.date(c.dataFechamento); } },
         { key: "processoId", label: "Processo", render: function (c) { return "<strong>" + esc(c.processoId) + "</strong>"; } },
